@@ -1,11 +1,13 @@
 package com.eventify.user.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.eventify.security.CustomUserDetails;
 import com.eventify.security.JwtService;
 import com.eventify.user.dto.LoginRequestDto;
 import com.eventify.user.dto.LoginResponseDto;
@@ -22,10 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserService {
     
-    private UserRepository userRepository;
-    private AuthenticationManager authenticationManager;
-    private JwtService jwtService;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final  AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
 
@@ -33,7 +35,8 @@ public class UserService {
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
         );
 
-        User user = (User) authentication.getPrincipal();
+        CustomUserDetails cud = (CustomUserDetails) authentication.getPrincipal();
+        User user = cud.getUser();
 
         String token = jwtService.generateAccessToken(user);
 
