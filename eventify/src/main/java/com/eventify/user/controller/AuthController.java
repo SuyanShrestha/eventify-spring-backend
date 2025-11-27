@@ -16,16 +16,20 @@ import com.eventify.user.dto.RegisterResponseDto;
 import com.eventify.user.model.User;
 import com.eventify.user.service.UserService;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
+@Slf4j
+@RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class AuthController {
    
 
-    @Autowired
-    private UserService userService; 
+    private final UserService userService; 
     
 	@PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {

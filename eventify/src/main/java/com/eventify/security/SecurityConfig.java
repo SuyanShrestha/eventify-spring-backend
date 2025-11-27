@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 
@@ -34,11 +35,12 @@ public class SecurityConfig {
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exceptionHandling -> exceptionHandling
+         
                 .authenticationEntryPoint((request, response, authException) -> {
-                    handlerExceptionResolver.resolveException(request, response, null, authException);
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    handlerExceptionResolver.resolveException(request, response, null, accessDeniedException);
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
                 })
             );
 

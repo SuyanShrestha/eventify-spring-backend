@@ -3,11 +3,15 @@ package com.eventify.user.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
+@NoArgsConstructor  //hibernate needs this
+@AllArgsConstructor  //Builder needs this
 @Builder
 @Table(name = "users")
 public class User {
