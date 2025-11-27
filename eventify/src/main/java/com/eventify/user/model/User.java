@@ -3,10 +3,12 @@ package com.eventify.user.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Entity
+@Builder
 @Table(name = "users")
 public class User {
    
