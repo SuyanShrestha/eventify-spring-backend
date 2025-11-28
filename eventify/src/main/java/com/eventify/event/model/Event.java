@@ -9,12 +9,14 @@ import com.eventify.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
 @AllArgsConstructor 
 @Builder
+@Data
 @Table(name = "events")
 public class Event {
 
@@ -22,10 +24,12 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
+    @JoinColumn (name = "organizer_id")
     private User organizer;
 
     @ManyToOne
+    @JoinColumn (name = "category_id")
     private EventCategory category;
 
     private String banner;          // File path or URL
@@ -46,9 +50,11 @@ public class Event {
 
     private Integer totalTickets;
 
+     @Column (name = "is_free")
     private boolean freeEvent;      // More idiomatic name
     private BigDecimal ticketPrice;
 
+    @Column (name = "is_approved")
     private boolean approved;
 
     @Column(name = "created_at", insertable = false, updatable = false)
