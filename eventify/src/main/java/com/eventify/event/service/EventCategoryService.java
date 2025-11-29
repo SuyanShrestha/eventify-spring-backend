@@ -1,9 +1,13 @@
 package com.eventify.event.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.eventify.event.dto.EventCategoryDTO;
+import com.eventify.event.dto.EventCategoryRequestDTO;
+import com.eventify.event.mapper.EventCategoryMapper;
 import com.eventify.event.model.EventCategory;
 import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
@@ -16,16 +20,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EventCategoryService {
     
-
+    private final EventCategoryMapper eventCategoryMapper;
     private final EventCategoryRepository eventCategoryRepository;
 
-    public void save(EventCategory category)
+    public void save(EventCategoryRequestDTO categoryDto)
     {
+        EventCategory category = EventCategory.builder()
+                .name(categoryDto.getName())
+                .build();
         eventCategoryRepository.save(category);
     }
 
-    public List<EventCategory> getCategories()
+    public List<EventCategoryDTO> getCategories()
     {
-        return eventCategoryRepository.findAll();
+        List<EventCategory> categories =  eventCategoryRepository.findAll();
+        return categories.stream()
+                .map(eventCategoryMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

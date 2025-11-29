@@ -6,9 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventCategoryDTO {
-    private Long id;
+public class EventCategoryRequestDTO {
     private String name;
 }

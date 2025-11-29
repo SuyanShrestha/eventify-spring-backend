@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient.ResponseSpec;
 
+import com.eventify.event.dto.EventCategoryDTO;
+import com.eventify.event.dto.EventCategoryRequestDTO;
 import com.eventify.event.model.EventCategory;
 import com.eventify.event.service.EventCategoryService;
 
@@ -25,16 +27,16 @@ public class EventCategoryController {
     private final EventCategoryService eventCategoryService;
 
     @PostMapping
-    public ResponseEntity<String> save(@RequestBody EventCategory category)
+    public ResponseEntity<String> save(@RequestBody EventCategoryRequestDTO category)
     {
         eventCategoryService.save(category);
         return ResponseEntity.ok("Category has been created");
     }
 
     @GetMapping
-    public ResponseEntity<List<EventCategory>> getCategories()
+    public ResponseEntity<List<EventCategoryDTO>> getCategories()
     {
-      List<EventCategory> categories = eventCategoryService.getCategories();
+      List<EventCategoryDTO> categories = eventCategoryService.getCategories();
       return ResponseEntity.ok(categories);
     }
     
