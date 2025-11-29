@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.model.Event;
 import com.eventify.event.service.EventService;
 
@@ -25,9 +26,8 @@ public class EventController {
     private final EventService eventService;
    
     @GetMapping
-    public ResponseEntity<List<Event>> getEvents() {
-        
-        List<Event> events = eventService.getAllEvents();
+    public ResponseEntity<List<EventResponseDTO>> getEvents() {
+        List<EventResponseDTO> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
 

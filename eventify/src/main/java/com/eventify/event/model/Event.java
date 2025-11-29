@@ -32,7 +32,7 @@ public class Event {
     @JoinColumn (name = "category_id")
     private EventCategory category;
 
-    private String banner;          // File path or URL
+    private String banner;
     private String title;
     private String subtitle;
 
@@ -50,8 +50,8 @@ public class Event {
 
     private Integer totalTickets;
 
-     @Column (name = "is_free")
-    private boolean freeEvent;      // More idiomatic name
+    @Column (name = "is_free")
+    private boolean freeEvent;
     private BigDecimal ticketPrice;
 
     @Column (name = "is_approved")
