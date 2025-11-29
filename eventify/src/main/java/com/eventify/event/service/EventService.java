@@ -3,11 +3,9 @@ package com.eventify.event.service;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
 
 import com.eventify.event.dto.EventDto;
-import com.eventify.event.mapper.EventMapper;
 import com.eventify.event.model.Event;
 import com.eventify.event.repository.EventRepository;
 

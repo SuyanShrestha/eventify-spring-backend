@@ -2,6 +2,8 @@ package com.eventify.user.model;
 
 import java.time.LocalDateTime;
 
+import com.eventify.core.enums.UserRole;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,12 +45,34 @@ public class User {
     @Column(length = 255)
     private String address;
 
-    private Boolean isOrganizer = false;
-    private Boolean isActive = true;
-    private Boolean isStaff = false;
-    private Boolean isSuperuser = false;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role = UserRole.USER;
 
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
-    private LocalDateTime lastLogin = LocalDateTime.now(); 
+
+    @Builder.Default
+    private LocalDateTime lastLogin = LocalDateTime.now();
+
+    public boolean isOrganizer() {
+        return this.role == UserRole.ORGANIZER;
+    }
+
+    public boolean isStaff() {
+        return this.role == UserRole.STAFF;
+    }
+
+    public boolean isSuperuser() {
+        return this.role == UserRole.SUPERUSER;
+    }
+
+
 }
