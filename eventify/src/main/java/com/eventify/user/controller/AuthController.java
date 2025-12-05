@@ -9,28 +9,36 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.user.dto.LoginRequestDto;
+import com.eventify.user.dto.LoginResponseDto;
+import com.eventify.user.dto.RegisterRequestDto;
+import com.eventify.user.dto.RegisterResponseDto;
 import com.eventify.user.model.User;
 import com.eventify.user.service.UserService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
+@Slf4j
+@RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class AuthController {
    
 
-    @Autowired
-    private UserService userService; 
+    private final UserService userService; 
     
 	@PostMapping("/login")
-    public ResponseEntity<String> login() {
-        return ResponseEntity.ok("Logged in ");
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+        return ResponseEntity.ok(userService.login(loginRequestDto));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register() {
-        return ResponseEntity.ok("User registered");
+    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto dto) {
+        return ResponseEntity.ok(userService.register(dto));
     }
 
     @PostMapping("/save")

@@ -1,0 +1,8 @@
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'USER';
+
+-- Drop individual boolean columns
+ALTER TABLE users
+DROP COLUMN IF EXISTS is_organizer,
+DROP COLUMN IF EXISTS is_staff,
+DROP COLUMN IF EXISTS is_superuser;
