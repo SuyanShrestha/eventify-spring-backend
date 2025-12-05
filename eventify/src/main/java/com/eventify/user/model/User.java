@@ -62,11 +62,11 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 
     @Builder.Default
     private LocalDateTime lastLogin = LocalDateTime.now();
