@@ -2,8 +2,14 @@ package com.eventify.event.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.eventify.event.enums.EventMode;
+import com.eventify.feedback.model.Feedback;
+import com.eventify.notification.model.Notification;
+import com.eventify.rsvp.model.RSVP;
+import com.eventify.ticket.model.Ticket;
 import com.eventify.user.model.User;
 
 import jakarta.persistence.*;
@@ -32,7 +38,7 @@ public class Event {
     @JoinColumn (name = "category_id")
     private EventCategory category;
 
-    private String banner;          // File path or URL
+    private String banner;
     private String title;
     private String subtitle;
 
@@ -50,8 +56,8 @@ public class Event {
 
     private Integer totalTickets;
 
-     @Column (name = "is_free")
-    private boolean freeEvent;      // More idiomatic name
+    @Column (name = "is_free")
+    private boolean freeEvent;
     private BigDecimal ticketPrice;
 
     @Column (name = "is_approved")
@@ -62,5 +68,26 @@ public class Event {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "event")
+    private List<RSVP> rsvps;
+
+    @OneToMany(mappedBy = "event")
+    private List<SavedEvent> savedByUsers;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Feedback> feedbacks = new ArrayList<>();
+
+
+
 
 }
