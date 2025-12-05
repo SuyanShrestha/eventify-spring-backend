@@ -2,8 +2,14 @@ package com.eventify.event.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.eventify.event.enums.EventMode;
+import com.eventify.feedback.model.Feedback;
+import com.eventify.notification.model.Notification;
+import com.eventify.rsvp.model.RSVP;
+import com.eventify.ticket.model.Ticket;
 import com.eventify.user.model.User;
 
 import jakarta.persistence.*;
@@ -62,5 +68,26 @@ public class Event {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "event")
+    private List<RSVP> rsvps;
+
+    @OneToMany(mappedBy = "event")
+    private List<SavedEvent> savedByUsers;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Ticket> tickets = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Feedback> feedbacks = new ArrayList<>();
+
+
+
 
 }
