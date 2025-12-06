@@ -23,12 +23,17 @@ public class EventCategoryService {
     private final EventCategoryMapper eventCategoryMapper;
     private final EventCategoryRepository eventCategoryRepository;
 
-    public void save(EventCategoryRequestDTO categoryDto)
+    public EventCategoryDTO save(EventCategoryRequestDTO categoryDto)
     {
+        if (eventCategoryRepository.existsByNameIgnoreCase(categoryDto.getName())) {
+            throw new RuntimeException("Category name already exists");
+        }
+
         EventCategory category = EventCategory.builder()
                 .name(categoryDto.getName())
                 .build();
-        eventCategoryRepository.save(category);
+        EventCategory eventCategory = eventCategoryRepository.save(category);
+        return eventCategoryMapper.toDto(eventCategory);
     }
 
     public List<EventCategoryDTO> getCategories()

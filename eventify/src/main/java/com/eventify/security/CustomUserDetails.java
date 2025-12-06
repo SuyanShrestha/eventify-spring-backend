@@ -31,7 +31,9 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new ArrayList<>();
+        // ROLE_ prefix as spring security conventions
+        String role = "ROLE_" + user.getRole().name();
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
