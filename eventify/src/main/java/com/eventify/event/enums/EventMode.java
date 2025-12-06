@@ -1,3 +1,3 @@
 package com.eventify.event.enums;
 
-public enum EventMode { PHYSICAL, REMOTE }
+public enum EventMode { PHYSICAL, REMOTE, ONLINE, OFFLINE }
