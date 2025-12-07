@@ -14,6 +14,8 @@ import com.eventify.event.model.Event;
 import com.eventify.event.model.EventCategory;
 import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
+import com.eventify.ticket.enums.TicketStatus;
+import com.eventify.ticket.repository.TicketRepository;
 import com.eventify.user.model.User;
 import com.eventify.user.repository.UserRepository;
 
@@ -34,6 +36,7 @@ public class EventService {
 
     private final EventCategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
 
 
     @Transactional
@@ -92,17 +95,25 @@ public class EventService {
         return eventMapper.toDto(saved);
     }
 
-    public EventResponseDTO getById(Integer id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + id));
-        return eventMapper.toDto(event);
-    }
+    @Transactional
+    public void deleteEvent(Long eventId, Long userId) {
 
-    public void deleteById(Integer id) {
-        if (!eventRepository.existsById(id)) {
-            throw new EntityNotFoundException("Cannot delete. Event not found with id: " + id);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You are not allowed to delete this event");
         }
-        eventRepository.deleteById(id);
+
+        boolean hasPaidTickets = ticketRepository.existsByEventIdAndStatus(eventId, TicketStatus.PAID);
+
+        if (hasPaidTickets) {
+            throw new IllegalStateException(
+                    "You cannot delete this event because users have already booked it."
+            );
+        }
+
+        eventRepository.deleteById(eventId);
     }
 
     public List<EventResponseDTO> getAllEvents() {

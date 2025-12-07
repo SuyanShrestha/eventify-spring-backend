@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.event.dto.EventCategoryDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
+import com.eventify.event.service.EventCategoryService;
 import com.eventify.event.service.EventService;
 import com.eventify.security.CustomUserDetails;
 
@@ -28,11 +31,19 @@ public class EventController {
 
 
     private final EventService eventService;
+    private final EventCategoryService eventCategoryService;
    
     @GetMapping
     public ResponseEntity<List<EventResponseDTO>> getEvents() {
         List<EventResponseDTO> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<EventCategoryDTO>> getCategories()
+    {
+      List<EventCategoryDTO> categories = eventCategoryService.getCategories();
+      return ResponseEntity.ok(categories);
     }
 
     @GetMapping("/my-events")
@@ -63,6 +74,11 @@ public class EventController {
         return ResponseEntity.ok(updated);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails user) {
+        eventService.deleteEvent(id, user.getUser().getId());
+        return ResponseEntity.noContent().build();
+    }
 
 
 }

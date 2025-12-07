@@ -69,11 +69,13 @@ public class Event {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "event")
-    private List<RSVP> rsvps;
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RSVP> rsvps = new ArrayList<>();
 
-    @OneToMany(mappedBy = "event")
-    private List<SavedEvent> savedByUsers;
+    @Builder.Default
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SavedEvent> savedByUsers = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
