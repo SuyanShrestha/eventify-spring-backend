@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,5 +56,19 @@ public class FeedbackController {
         Long userId = userDetails.getUser().getId();
         FeedbackResponseDTO feedback = feedbackService.createFeedback(eventId, userId, request);
         return ResponseEntity.ok(feedback);
+    }
+
+    @PutMapping("/{feedbackId}")
+    public ResponseEntity<FeedbackResponseDTO> updateFeedback(
+            @PathVariable Long feedbackId,
+            @RequestBody FeedbackRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        FeedbackResponseDTO dto = feedbackService.updateFeedback(
+                feedbackId,
+                userDetails.getUser().getId(),
+                request
+        );
+        return ResponseEntity.ok(dto);
     }
 }

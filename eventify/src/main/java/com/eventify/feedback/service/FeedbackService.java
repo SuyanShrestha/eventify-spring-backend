@@ -52,6 +52,21 @@ public class FeedbackService {
         return feedbackMapper.toDto(feedback);
     }
 
+
+    public FeedbackResponseDTO updateFeedback(Long feedbackId, Long userId, FeedbackRequestDTO requestDTO) {
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found"));
+
+        if (!feedback.getUser().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to edit this feedback.");
+        }
+
+        feedback.setMessage(requestDTO.getMessage());
+        feedback = feedbackRepository.save(feedback);
+
+        return feedbackMapper.toDto(feedback);
+    }
+
     
     public List<FeedbackResponseDTO> getFeedbacksForEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
