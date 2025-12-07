@@ -141,9 +141,14 @@ public class EventService {
     public List<EventResponseDTO> getAllEvents() {
         List<Event> events = eventRepository.findByApprovedTrue();
 
-        // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
+        // TODO: manually fill remaining fields : isSaved
         return events.stream().map(event -> {
             EventResponseDTO dto = eventMapper.toDto(event);
+
+            // attendeesCount is always 0 since user is not logged in here
+            dto.setAttendeesCount(0);
+
+            dto.setTicketsAvailable(getTicketsAvailable(event));
             return dto;
         }).collect(Collectors.toList());
     }
@@ -156,9 +161,11 @@ public class EventService {
         try {
             List<Event> events = eventRepository.findByOrganizerId(organizerId);
 
-            // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
+            // TODO: manually fill remaining fields : isSaved
             return events.stream().map(event -> {
                 EventResponseDTO dto = eventMapper.toDto(event);
+                dto.setAttendeesCount(getAttendeesCount(event, organizerId));
+                dto.setTicketsAvailable(getTicketsAvailable(event));
                 return dto;
             }).collect(Collectors.toList());
 
