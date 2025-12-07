@@ -50,23 +50,9 @@ public class Ticket {
     @Column(length = 10, nullable = false)
     private TicketStatus status = TicketStatus.RESERVED;
 
-    @OneToOne(mappedBy = "ticket")
+    @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     private BookedTicket bookedTicket;
 
-    @OneToOne(mappedBy = "ticket")
+    @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
-
-
-
-    // ===========================
-    // Bidirectional Relationships
-    // ===========================
-
-    // @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL)
-    // @JsonIgnore
-    // private Payment payment;
-
-    // @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL)
-    // @JsonIgnore
-    // private BookedTicket bookedTicket;
 }

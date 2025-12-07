@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.eventify.user.dto.LoginRequestDto;
-import com.eventify.user.dto.LoginResponseDto;
-import com.eventify.user.dto.RegisterRequestDto;
-import com.eventify.user.dto.RegisterResponseDto;
+import com.eventify.user.dto.LoginRequestDTO;
+import com.eventify.user.dto.LoginResponseDTO;
+import com.eventify.user.dto.RegisterRequestDTO;
+import com.eventify.user.dto.RegisterResponseDTO;
 import com.eventify.user.model.User;
 import com.eventify.user.service.UserService;
 
@@ -32,12 +32,12 @@ public class AuthController {
     private final UserService userService; 
     
 	@PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDto) {
         return ResponseEntity.ok(userService.login(loginRequestDto));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto dto) {
+    public ResponseEntity<RegisterResponseDTO> register(@RequestBody RegisterRequestDTO dto) {
         return ResponseEntity.ok(userService.register(dto));
     }
 

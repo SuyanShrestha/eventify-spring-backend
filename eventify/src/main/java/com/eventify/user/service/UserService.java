@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 
 import com.eventify.security.CustomUserDetails;
 import com.eventify.security.JwtService;
-import com.eventify.user.dto.LoginRequestDto;
-import com.eventify.user.dto.LoginResponseDto;
-import com.eventify.user.dto.RegisterRequestDto;
-import com.eventify.user.dto.RegisterResponseDto;
+import com.eventify.user.dto.LoginRequestDTO;
+import com.eventify.user.dto.LoginResponseDTO;
+import com.eventify.user.dto.RegisterRequestDTO;
+import com.eventify.user.dto.RegisterResponseDTO;
 import com.eventify.user.model.User;
 import com.eventify.user.repository.UserRepository;
 
@@ -29,7 +29,7 @@ public class UserService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
-    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+    public LoginResponseDTO login(LoginRequestDTO loginRequestDto) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
@@ -40,12 +40,10 @@ public class UserService {
 
         String token = jwtService.generateAccessToken(user);
 
-        log.debug("principal user in login: {} and token: {}", user, token);
-
-        return new LoginResponseDto(token, user.getId());
+        return new LoginResponseDTO(token, user.getId());
     }
 
-    public RegisterResponseDto register(RegisterRequestDto registerRequestDto) {
+    public RegisterResponseDTO register(RegisterRequestDTO registerRequestDto) {
         User user = userRepository.findByEmail(registerRequestDto.getEmail()).orElse(null);
         if(user != null) throw new IllegalArgumentException("User already exists");
 
@@ -57,9 +55,7 @@ public class UserService {
 
         String token = jwtService.generateAccessToken(savedUser);
 
-        log.debug("saved user in register: {} and token: {}", savedUser, token);
-
-        return new RegisterResponseDto(token, savedUser.getId());
+        return new RegisterResponseDTO(token, savedUser.getId());
     }
 
     public User saveUser(User user) {
@@ -70,11 +66,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User getUserById(Integer id) {
+    public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
     }
 
-    public void deleteUserById(Integer id) {
+    public void deleteUserById(Long id) {
         userRepository.deleteById(id);
     }
 

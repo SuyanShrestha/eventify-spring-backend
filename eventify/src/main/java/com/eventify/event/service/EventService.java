@@ -1,15 +1,30 @@
 package com.eventify.event.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
+import com.eventify.event.dto.SavedEventResponseDTO;
 import com.eventify.event.mapper.EventMapper;
 import com.eventify.event.model.Event;
+import com.eventify.event.model.EventCategory;
+import com.eventify.event.model.SavedEvent;
+import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
+import com.eventify.event.repository.SavedEventRepository;
+import com.eventify.ticket.enums.TicketStatus;
+import com.eventify.ticket.model.Ticket;
+import com.eventify.ticket.repository.TicketRepository;
+import com.eventify.user.model.User;
+import com.eventify.user.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,42 +40,150 @@ public class EventService {
     private final EventMapper eventMapper;
 
     private final EventRepository eventRepository;
+    private final SavedEventRepository savedEventRepository;
+    private final EventCategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
 
 
-    public EventResponseDTO save(Event event) {
+    @Transactional
+    public EventResponseDTO save(EventRequestDTO dto, Long userId) {
+
+        validateEventDates(dto);
+
+        EventCategory category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
+
+        Event event = eventMapper.fromRequestDto(dto);
+
+        event.setCategory(category);
         event.setApproved(false);
 
-        boolean isFree = event.getTicketPrice() == null || event.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0;
+        boolean isFree =
+                dto.getTicketPrice() == null ||
+                dto.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0;
+
         event.setFreeEvent(isFree);
+        event.setBookingDeadline(
+                dto.getBookingDeadline() != null
+                        ? dto.getBookingDeadline()
+                        : dto.getEndDate()
+        );
 
-        if (event.getBookingDeadline() == null) {
-            event.setBookingDeadline(event.getEndDate());
+        User organizer = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid user"));
+        event.setOrganizer(organizer);
+
+        Event saved = eventRepository.save(event);
+        return eventMapper.toDto(saved);
+    }
+
+    @Transactional
+    public EventResponseDTO update(Long eventId, EventRequestDTO dto, Long userId) {
+        validateEventDates(dto);
+
+        Event existing = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        if (!existing.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("Only organizer can update the event");
         }
 
-        Event savedEvent = eventRepository.save(event);
-        return eventMapper.toDto(savedEvent);
-
-    }
-
-    public EventResponseDTO getById(Integer id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + id));
-        return eventMapper.toDto(event);
-    }
-
-    public void deleteById(Integer id) {
-        if (!eventRepository.existsById(id)) {
-            throw new EntityNotFoundException("Cannot delete. Event not found with id: " + id);
+        if (!dto.getCategoryId().equals(existing.getCategory().getId())) {
+            EventCategory category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
+            existing.setCategory(category);
         }
-        eventRepository.deleteById(id);
+
+        eventMapper.updateFromDto(dto, existing);
+        existing.setApproved(false);
+        Event saved = eventRepository.save(existing);
+
+        return eventMapper.toDto(saved);
     }
 
-    public List<EventResponseDTO> getAllEvents() {
+    @Transactional
+    public String toggleSaveEvent(Long eventId, Long userId) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        if (!event.isApproved()) {
+            throw new IllegalStateException("Event is not approved");
+        }
+
+        return savedEventRepository.findByUserIdAndEventId(userId, eventId)
+                .map(saved -> {
+                    savedEventRepository.delete(saved);
+                    return "Event unsaved successfully.";
+                })
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+                    SavedEvent se = SavedEvent.builder()
+                            .user(user)
+                            .event(event)
+                            .build();
+                    savedEventRepository.save(se);
+
+                    return "Event saved successfully.";
+                });
+    }
+
+    @Transactional
+    public void deleteEvent(Long eventId, Long userId) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You are not allowed to delete this event");
+        }
+
+        boolean hasPaidTickets = ticketRepository.existsByEventIdAndStatus(eventId, TicketStatus.PAID);
+
+        if (hasPaidTickets) {
+            throw new IllegalStateException(
+                    "You cannot delete this event because users have already booked it."
+            );
+        }
+
+        eventRepository.deleteById(eventId);
+    }
+
+    public List<EventResponseDTO> getMyBookings(Long userId) {
+        List<Ticket> tickets = ticketRepository.findPaidTicketsForUser(userId);
+
+        List<Event> events = tickets.stream()
+                .map(Ticket::getEvent)
+                .distinct()
+                .toList();
+        List<EventResponseDTO> bookings = new ArrayList<>();
+
+        for (Event event : events) {
+            EventResponseDTO dto = eventMapper.toDto(event);
+            dto.setAttendeesCount(getAttendeesCount(event, userId));
+            dto.setTicketsAvailable(getTicketsAvailable(event));
+            bookings.add(dto);
+        }
+
+        return bookings;
+    }
+
+
+    public List<EventResponseDTO> getAllEvents(Long userId) {
         List<Event> events = eventRepository.findByApprovedTrue();
+        
+        Set<Long> savedEventIds = (userId != null)
+            ? savedEventRepository.findSavedEventIdsByUserId(userId)
+            : Collections.emptySet();
 
-        // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
         return events.stream().map(event -> {
             EventResponseDTO dto = eventMapper.toDto(event);
+            dto.setAttendeesCount(getAttendeesCount(event, userId));
+            dto.setTicketsAvailable(getTicketsAvailable(event));
+            dto.setSaved(savedEventIds.contains(event.getId()));
             return dto;
         }).collect(Collectors.toList());
     }
@@ -72,10 +195,13 @@ public class EventService {
 
         try {
             List<Event> events = eventRepository.findByOrganizerId(organizerId);
+            Set<Long> savedEventIds = savedEventRepository.findSavedEventIdsByUserId(organizerId);
 
-            // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
             return events.stream().map(event -> {
                 EventResponseDTO dto = eventMapper.toDto(event);
+                dto.setAttendeesCount(getAttendeesCount(event, organizerId));
+                dto.setTicketsAvailable(getTicketsAvailable(event));
+                dto.setSaved(savedEventIds.contains(event.getId()));
                 return dto;
             }).collect(Collectors.toList());
 
@@ -83,6 +209,21 @@ public class EventService {
             throw new IllegalArgumentException("Failed to fetch events for organizerId: " + organizerId, e);
         }
         
+    }
+
+    public List<SavedEventResponseDTO> getSavedEventsForUser(Long userId) {
+        List<SavedEvent> savedEvents = savedEventRepository
+                .findByUserIdAndEventApprovedTrueOrderBySavedAtDesc(userId);
+
+        return savedEvents.stream().map(se -> {
+            EventResponseDTO eventDto = eventMapper.toDto(se.getEvent());
+
+            eventDto.setTicketsAvailable(getTicketsAvailable(se.getEvent()));
+            eventDto.setAttendeesCount(getAttendeesCount(se.getEvent(), userId));
+            eventDto.setSaved(true);
+
+            return new SavedEventResponseDTO(se.getId(), se.getSavedAt(), eventDto);
+        }).toList();
     }
 
 
@@ -108,6 +249,50 @@ public class EventService {
         event.setApproved(true);
         Event savedEvent = eventRepository.save(event);
         return eventMapper.toDto(savedEvent);
+    }
+
+
+    // PRIVATE METHODS
+
+    private void validateEventDates(EventRequestDTO dto) {
+        if (!dto.getStartDate().isBefore(dto.getEndDate())) {
+            throw new IllegalArgumentException("End date must be after start date");
+        }
+        if (dto.getBookingDeadline() != null &&
+            !dto.getBookingDeadline().isBefore(dto.getEndDate())) {
+            throw new IllegalArgumentException("Booking deadline must be before event end date");
+        }
+        if (dto.getCategoryId() == null) {
+            throw new IllegalArgumentException("Event category is required");
+        }
+    }
+
+    private int getAttendeesCount(Event event, Long userId) {
+        if (userId == null || event.getOrganizer() == null || event.getOrganizer().getId() == null) {
+            return 0;
+        }
+
+        if (event.getOrganizer().getId().equals(userId)) {
+            return event.getTickets().stream()
+                    .filter(t -> t.getStatus() == TicketStatus.PAID)
+                    .mapToInt(Ticket::getQuantity)
+                    .sum();
+        }
+        return 0;
+    }
+
+    private Integer getTicketsAvailable(Event event) {
+        int sold = event.getTickets().stream()
+                .filter(t -> t.getStatus() == TicketStatus.PAID)
+                .mapToInt(Ticket::getQuantity)
+                .sum();
+
+        if (event.getTotalTickets() != null) {
+            return event.getTotalTickets() - sold;
+        } else if (event.isFreeEvent()) {
+            return null;
+        }
+        return 0;
     }
 
 }

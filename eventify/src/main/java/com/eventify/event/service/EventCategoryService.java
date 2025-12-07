@@ -10,7 +10,6 @@ import com.eventify.event.dto.EventCategoryRequestDTO;
 import com.eventify.event.mapper.EventCategoryMapper;
 import com.eventify.event.model.EventCategory;
 import com.eventify.event.repository.EventCategoryRepository;
-import com.eventify.event.repository.EventRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
