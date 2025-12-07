@@ -13,7 +13,7 @@ import com.eventify.event.service.EventCategoryService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/admin/category")
+@RequestMapping("/api/admin/categories")
 @RequiredArgsConstructor
 public class AdminEventCategoryController {
 
