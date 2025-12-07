@@ -55,6 +55,15 @@ public class EventController {
         return ResponseEntity.ok(events);
     }
 
+    @GetMapping("/my-bookings")
+    public ResponseEntity<List<EventResponseDTO>> getMyBookings(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        List<EventResponseDTO> bookings = eventService.getMyBookings(userId);
+        return ResponseEntity.ok(bookings);
+    }
+
     @PostMapping
     public ResponseEntity<EventResponseDTO> save(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody EventRequestDTO event) {
         Long userId = userDetails.getUser().getId();

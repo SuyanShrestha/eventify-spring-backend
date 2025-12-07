@@ -2,6 +2,7 @@ package com.eventify.event.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import com.eventify.event.model.EventCategory;
 import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
 import com.eventify.ticket.enums.TicketStatus;
+import com.eventify.ticket.model.Ticket;
 import com.eventify.ticket.repository.TicketRepository;
 import com.eventify.user.model.User;
 import com.eventify.user.repository.UserRepository;
@@ -116,6 +118,26 @@ public class EventService {
         eventRepository.deleteById(eventId);
     }
 
+    public List<EventResponseDTO> getMyBookings(Long userId) {
+        List<Ticket> tickets = ticketRepository.findPaidTicketsForUser(userId);
+
+        List<Event> events = tickets.stream()
+                .map(Ticket::getEvent)
+                .distinct()
+                .toList();
+        List<EventResponseDTO> bookings = new ArrayList<>();
+
+        for (Event event : events) {
+            EventResponseDTO dto = eventMapper.toDto(event);
+            dto.setAttendeesCount(getAttendeesCount(event, userId));
+            dto.setTicketsAvailable(getTicketsAvailable(event));
+            bookings.add(dto);
+        }
+
+        return bookings;
+    }
+
+
     public List<EventResponseDTO> getAllEvents() {
         List<Event> events = eventRepository.findByApprovedTrue();
 
@@ -185,6 +207,30 @@ public class EventService {
         if (dto.getCategoryId() == null) {
             throw new IllegalArgumentException("Event category is required");
         }
+    }
+
+    private int getAttendeesCount(Event event, Long userId) {
+        if (event.getOrganizer().getId().equals(userId)) {
+            return event.getTickets().stream()
+                    .filter(t -> t.getStatus() == TicketStatus.PAID)
+                    .mapToInt(Ticket::getQuantity)
+                    .sum();
+        }
+        return 0;
+    }
+
+    private Integer getTicketsAvailable(Event event) {
+        int sold = event.getTickets().stream()
+                .filter(t -> t.getStatus() == TicketStatus.PAID)
+                .mapToInt(Ticket::getQuantity)
+                .sum();
+
+        if (event.getTotalTickets() != null) {
+            return event.getTotalTickets() - sold;
+        } else if (event.isFreeEvent()) {
+            return null;
+        }
+        return 0;
     }
 
 
