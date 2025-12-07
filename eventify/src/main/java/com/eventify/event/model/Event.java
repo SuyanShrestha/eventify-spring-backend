@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.event.enums.EventMode;
 import com.eventify.feedback.model.Feedback;
 import com.eventify.notification.model.Notification;
@@ -63,7 +65,8 @@ public class Event {
     @Column (name = "is_approved")
     private boolean approved;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)

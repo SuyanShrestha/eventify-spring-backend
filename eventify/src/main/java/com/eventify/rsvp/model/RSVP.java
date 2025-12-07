@@ -2,6 +2,8 @@ package com.eventify.rsvp.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.event.model.Event;
 import com.eventify.rsvp.enums.RSVPStatus;
 import com.eventify.user.model.User;
@@ -38,7 +40,8 @@ public class RSVP {
     @Column(length = 20, nullable = false)
     private RSVPStatus status;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)

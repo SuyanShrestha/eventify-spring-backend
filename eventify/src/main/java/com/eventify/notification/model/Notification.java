@@ -2,6 +2,8 @@ package com.eventify.notification.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.event.model.Event;
 import com.eventify.user.model.User;
 
@@ -34,6 +36,7 @@ public class Notification {
     @Builder.Default
     private Boolean isRead = false;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 }

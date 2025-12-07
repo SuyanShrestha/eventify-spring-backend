@@ -2,6 +2,8 @@ package com.eventify.feedback.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.event.model.Event;
 import com.eventify.user.model.User;
 
@@ -31,7 +33,8 @@ public class Feedback {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String message;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
 }

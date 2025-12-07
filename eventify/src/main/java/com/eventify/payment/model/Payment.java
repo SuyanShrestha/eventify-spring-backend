@@ -3,6 +3,8 @@ package com.eventify.payment.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.payment.enums.PaymentStatus;
 import com.eventify.ticket.model.Ticket;
 import com.eventify.user.model.User;
@@ -41,7 +43,8 @@ public class Payment {
     @Column(length = 20, nullable = false)
     private PaymentStatus status = PaymentStatus.PENDING;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
