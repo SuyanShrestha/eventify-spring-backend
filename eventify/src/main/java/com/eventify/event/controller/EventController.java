@@ -5,14 +5,15 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
-import com.eventify.event.model.Event;
 import com.eventify.event.service.EventService;
 import com.eventify.security.CustomUserDetails;
 
@@ -50,6 +51,18 @@ public class EventController {
         return ResponseEntity.ok(saved);
         
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EventResponseDTO> update(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody EventRequestDTO dto) {
+
+        Long userId = userDetails.getUser().getId();
+        EventResponseDTO updated = eventService.update(id, dto, userId);
+        return ResponseEntity.ok(updated);
+    }
+
 
 
 }

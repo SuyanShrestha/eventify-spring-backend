@@ -2,6 +2,7 @@ package com.eventify.event.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
@@ -31,4 +32,13 @@ public interface EventMapper {
 
     @Mapping(source = "categoryId", target = "category.id")
     Event fromRequestDto(EventRequestDTO dto);
+
+    // to preserver original id, organizer
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "organizer", ignore = true)
+    @Mapping(target = "approved", ignore = true)
+    @Mapping(target = "freeEvent", expression = "java(dto.getTicketPrice() == null || dto.getTicketPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)")
+    @Mapping(target = "bookingDeadline", expression = "java(dto.getBookingDeadline() != null ? dto.getBookingDeadline() : existing.getEndDate())")
+    void updateFromDto(EventRequestDTO dto, @MappingTarget Event existing);
+
 }

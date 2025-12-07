@@ -36,17 +36,10 @@ public class EventService {
     private final UserRepository userRepository;
 
 
+    @Transactional
     public EventResponseDTO save(EventRequestDTO dto, Long userId) {
 
-        if (dto.getStartDate().isAfter(dto.getEndDate()) ||
-            dto.getStartDate().isEqual(dto.getEndDate())) {
-            throw new IllegalArgumentException("End date must be after start date");
-        }
-
-        if (dto.getBookingDeadline() != null &&
-            !dto.getBookingDeadline().isBefore(dto.getEndDate())) {
-            throw new IllegalArgumentException("Booking deadline must be before event end date");
-        }
+        validateEventDates(dto);
 
         EventCategory category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
@@ -75,6 +68,29 @@ public class EventService {
         return eventMapper.toDto(saved);
     }
 
+    @Transactional
+    public EventResponseDTO update(Long eventId, EventRequestDTO dto, Long userId) {
+        validateEventDates(dto);
+
+        Event existing = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        if (!existing.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("Only organizer can update the event");
+        }
+
+        if (!dto.getCategoryId().equals(existing.getCategory().getId())) {
+            EventCategory category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
+            existing.setCategory(category);
+        }
+
+        eventMapper.updateFromDto(dto, existing);
+        existing.setApproved(false);
+        Event saved = eventRepository.save(existing);
+
+        return eventMapper.toDto(saved);
+    }
 
     public EventResponseDTO getById(Integer id) {
         Event event = eventRepository.findById(id)
@@ -143,5 +159,22 @@ public class EventService {
         Event savedEvent = eventRepository.save(event);
         return eventMapper.toDto(savedEvent);
     }
+
+
+    // PRIVATE METHODS
+
+    private void validateEventDates(EventRequestDTO dto) {
+        if (!dto.getStartDate().isBefore(dto.getEndDate())) {
+            throw new IllegalArgumentException("End date must be after start date");
+        }
+        if (dto.getBookingDeadline() != null &&
+            !dto.getBookingDeadline().isBefore(dto.getEndDate())) {
+            throw new IllegalArgumentException("Booking deadline must be before event end date");
+        }
+        if (dto.getCategoryId() == null) {
+            throw new IllegalArgumentException("Event category is required");
+        }
+    }
+
 
 }
