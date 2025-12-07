@@ -101,6 +101,35 @@ public class EventService {
     }
 
     @Transactional
+    public String toggleSaveEvent(Long eventId, Long userId) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        if (!event.isApproved()) {
+            throw new IllegalStateException("Event is not approved");
+        }
+
+        return savedEventRepository.findByUserIdAndEventId(userId, eventId)
+                .map(saved -> {
+                    savedEventRepository.delete(saved);
+                    return "Event unsaved successfully.";
+                })
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+                    SavedEvent se = SavedEvent.builder()
+                            .user(user)
+                            .event(event)
+                            .build();
+                    savedEventRepository.save(se);
+
+                    return "Event saved successfully.";
+                });
+    }
+
+    @Transactional
     public void deleteEvent(Long eventId, Long userId) {
 
         Event event = eventRepository.findById(eventId)

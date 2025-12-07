@@ -1,6 +1,7 @@
 package com.eventify.event.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -70,6 +71,17 @@ public class EventController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         List<SavedEventResponseDTO> savedEvents = eventService.getSavedEventsForUser(userDetails.getUser().getId());
         return ResponseEntity.ok(savedEvents);
+    }
+
+    @PostMapping("/toggle-save/{eventId}")
+    public ResponseEntity<Map<String, String>> toggleSaveEvent(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        String message = eventService.toggleSaveEvent(eventId, userId);
+
+        return ResponseEntity.ok(Map.of("detail", message));
     }
 
     @PostMapping
