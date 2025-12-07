@@ -40,8 +40,6 @@ public class UserService {
 
         String token = jwtService.generateAccessToken(user);
 
-        log.debug("principal user in login: {} and token: {}", user, token);
-
         return new LoginResponseDto(token, user.getId());
     }
 
@@ -70,11 +68,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User getUserById(Integer id) {
+    public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
     }
 
-    public void deleteUserById(Integer id) {
+    public void deleteUserById(Long id) {
         userRepository.deleteById(id);
     }
 
