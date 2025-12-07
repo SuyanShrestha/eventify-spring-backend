@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eventify.event.dto.EventCategoryDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
+import com.eventify.event.dto.SavedEventResponseDTO;
 import com.eventify.event.service.EventCategoryService;
 import com.eventify.event.service.EventService;
 import com.eventify.security.CustomUserDetails;
@@ -62,6 +63,13 @@ public class EventController {
         Long userId = userDetails.getUser().getId();
         List<EventResponseDTO> bookings = eventService.getMyBookings(userId);
         return ResponseEntity.ok(bookings);
+    }
+
+    @GetMapping("/saved")
+    public ResponseEntity<List<SavedEventResponseDTO>> getSavedEvents(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<SavedEventResponseDTO> savedEvents = eventService.getSavedEventsForUser(userDetails.getUser().getId());
+        return ResponseEntity.ok(savedEvents);
     }
 
     @PostMapping

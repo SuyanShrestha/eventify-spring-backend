@@ -10,11 +10,14 @@ import org.springframework.stereotype.Service;
 
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
+import com.eventify.event.dto.SavedEventResponseDTO;
 import com.eventify.event.mapper.EventMapper;
 import com.eventify.event.model.Event;
 import com.eventify.event.model.EventCategory;
+import com.eventify.event.model.SavedEvent;
 import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
+import com.eventify.event.repository.SavedEventRepository;
 import com.eventify.ticket.enums.TicketStatus;
 import com.eventify.ticket.model.Ticket;
 import com.eventify.ticket.repository.TicketRepository;
@@ -35,7 +38,7 @@ public class EventService {
     private final EventMapper eventMapper;
 
     private final EventRepository eventRepository;
-
+    private final SavedEventRepository savedEventRepository;
     private final EventCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
@@ -173,6 +176,21 @@ public class EventService {
             throw new IllegalArgumentException("Failed to fetch events for organizerId: " + organizerId, e);
         }
         
+    }
+
+    public List<SavedEventResponseDTO> getSavedEventsForUser(Long userId) {
+        List<SavedEvent> savedEvents = savedEventRepository
+                .findByUserIdAndEventApprovedTrueOrderBySavedAtDesc(userId);
+
+        return savedEvents.stream().map(se -> {
+            EventResponseDTO eventDto = eventMapper.toDto(se.getEvent());
+
+            eventDto.setTicketsAvailable(getTicketsAvailable(se.getEvent()));
+            eventDto.setAttendeesCount(getAttendeesCount(se.getEvent(), userId));
+            eventDto.setSaved(true);
+
+            return new SavedEventResponseDTO(se.getId(), se.getSavedAt(), eventDto);
+        }).toList();
     }
 
 

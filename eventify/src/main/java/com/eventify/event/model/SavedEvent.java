@@ -1,11 +1,14 @@
 package com.eventify.event.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 import com.eventify.user.model.User;
 
 @Entity
+@Data
 @Table(
     name = "saved_events"
 )
