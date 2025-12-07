@@ -36,8 +36,11 @@ public class EventController {
     private final EventCategoryService eventCategoryService;
    
     @GetMapping
-    public ResponseEntity<List<EventResponseDTO>> getEvents() {
-        List<EventResponseDTO> events = eventService.getAllEvents();
+    public ResponseEntity<List<EventResponseDTO>> getEvents(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
+        List<EventResponseDTO> events = eventService.getAllEvents(userId);
         return ResponseEntity.ok(events);
     }
 

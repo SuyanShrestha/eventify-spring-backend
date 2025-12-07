@@ -3,7 +3,9 @@ package com.eventify.event.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -170,17 +172,18 @@ public class EventService {
     }
 
 
-    public List<EventResponseDTO> getAllEvents() {
+    public List<EventResponseDTO> getAllEvents(Long userId) {
         List<Event> events = eventRepository.findByApprovedTrue();
+        
+        Set<Long> savedEventIds = (userId != null)
+            ? savedEventRepository.findSavedEventIdsByUserId(userId)
+            : Collections.emptySet();
 
-        // TODO: manually fill remaining fields : isSaved
         return events.stream().map(event -> {
             EventResponseDTO dto = eventMapper.toDto(event);
-
-            // attendeesCount is always 0 since user is not logged in here
-            dto.setAttendeesCount(0);
-
+            dto.setAttendeesCount(getAttendeesCount(event, userId));
             dto.setTicketsAvailable(getTicketsAvailable(event));
+            dto.setSaved(savedEventIds.contains(event.getId()));
             return dto;
         }).collect(Collectors.toList());
     }
@@ -192,12 +195,13 @@ public class EventService {
 
         try {
             List<Event> events = eventRepository.findByOrganizerId(organizerId);
+            Set<Long> savedEventIds = savedEventRepository.findSavedEventIdsByUserId(organizerId);
 
-            // TODO: manually fill remaining fields : isSaved
             return events.stream().map(event -> {
                 EventResponseDTO dto = eventMapper.toDto(event);
                 dto.setAttendeesCount(getAttendeesCount(event, organizerId));
                 dto.setTicketsAvailable(getTicketsAvailable(event));
+                dto.setSaved(savedEventIds.contains(event.getId()));
                 return dto;
             }).collect(Collectors.toList());
 
@@ -264,6 +268,10 @@ public class EventService {
     }
 
     private int getAttendeesCount(Event event, Long userId) {
+        if (userId == null || event.getOrganizer() == null || event.getOrganizer().getId() == null) {
+            return 0;
+        }
+
         if (event.getOrganizer().getId().equals(userId)) {
             return event.getTickets().stream()
                     .filter(t -> t.getStatus() == TicketStatus.PAID)
@@ -286,6 +294,5 @@ public class EventService {
         }
         return 0;
     }
-
 
 }

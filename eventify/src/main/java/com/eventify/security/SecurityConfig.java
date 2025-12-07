@@ -1,6 +1,7 @@
 package com.eventify.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,6 +34,7 @@ public class SecurityConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/events").permitAll()
                 .requestMatchers("/api/admin/**").hasRole(UserRole.SUPERUSER.name())
                 .anyRequest().authenticated()
             )
