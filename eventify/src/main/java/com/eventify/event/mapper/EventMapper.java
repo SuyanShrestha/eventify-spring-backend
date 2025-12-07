@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
+import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.model.Event;
 
@@ -27,4 +28,7 @@ public interface EventMapper {
     @Mapping(source = "categoryDetails.name", target = "category.name")
     @Mapping(source = "organizer.id", target = "organizer.id")
     Event toEntity(EventResponseDTO dto);
+
+    @Mapping(source = "categoryId", target = "category.id")
+    Event fromRequestDto(EventRequestDTO dto);
 }

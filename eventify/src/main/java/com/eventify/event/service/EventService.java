@@ -1,15 +1,21 @@
 package com.eventify.event.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.mapper.EventMapper;
 import com.eventify.event.model.Event;
+import com.eventify.event.model.EventCategory;
+import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
+import com.eventify.user.model.User;
+import com.eventify.user.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -26,21 +32,49 @@ public class EventService {
 
     private final EventRepository eventRepository;
 
+    private final EventCategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
-    public EventResponseDTO save(Event event) {
-        event.setApproved(false);
 
-        boolean isFree = event.getTicketPrice() == null || event.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0;
-        event.setFreeEvent(isFree);
+    public EventResponseDTO save(EventRequestDTO dto, Long userId) {
 
-        if (event.getBookingDeadline() == null) {
-            event.setBookingDeadline(event.getEndDate());
+        if (dto.getStartDate().isAfter(dto.getEndDate()) ||
+            dto.getStartDate().isEqual(dto.getEndDate())) {
+            throw new IllegalArgumentException("End date must be after start date");
         }
 
-        Event savedEvent = eventRepository.save(event);
-        return eventMapper.toDto(savedEvent);
+        if (dto.getBookingDeadline() != null &&
+            !dto.getBookingDeadline().isBefore(dto.getEndDate())) {
+            throw new IllegalArgumentException("Booking deadline must be before event end date");
+        }
 
+        EventCategory category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
+
+        Event event = eventMapper.fromRequestDto(dto);
+
+        event.setCategory(category);
+        event.setApproved(false);
+
+        boolean isFree =
+                dto.getTicketPrice() == null ||
+                dto.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0;
+
+        event.setFreeEvent(isFree);
+        event.setBookingDeadline(
+                dto.getBookingDeadline() != null
+                        ? dto.getBookingDeadline()
+                        : dto.getEndDate()
+        );
+
+        User organizer = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid user"));
+        event.setOrganizer(organizer);
+
+        Event saved = eventRepository.save(event);
+        return eventMapper.toDto(saved);
     }
+
 
     public EventResponseDTO getById(Integer id) {
         Event event = eventRepository.findById(id)

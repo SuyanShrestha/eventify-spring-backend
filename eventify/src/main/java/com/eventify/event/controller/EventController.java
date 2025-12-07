@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.model.Event;
 import com.eventify.event.service.EventService;
@@ -43,8 +44,9 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<EventResponseDTO> save(@RequestBody Event event) {
-        EventResponseDTO saved = eventService.save(event);
+    public ResponseEntity<EventResponseDTO> save(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody EventRequestDTO event) {
+        Long userId = userDetails.getUser().getId();
+        EventResponseDTO saved = eventService.save(event, userId);
         return ResponseEntity.ok(saved);
         
     }
