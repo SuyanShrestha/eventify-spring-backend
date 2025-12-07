@@ -37,6 +37,15 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbacks);
     }
 
+    @GetMapping("/{feedbackId}")
+    public ResponseEntity<FeedbackResponseDTO> getFeedback(
+            @PathVariable Long feedbackId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        FeedbackResponseDTO dto = feedbackService.getFeedbackById(feedbackId, userDetails.getUser().getId());
+        return ResponseEntity.ok(dto);
+    }
+
     @PostMapping("/event/{eventId}")
     public ResponseEntity<FeedbackResponseDTO> createFeedback(
             @PathVariable Long eventId,

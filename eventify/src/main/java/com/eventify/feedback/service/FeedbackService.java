@@ -70,4 +70,15 @@ public class FeedbackService {
                 .map(feedbackMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    public FeedbackResponseDTO getFeedbackById(Long feedbackId, Long userId) {
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found"));
+
+        if (!feedback.getUser().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to view this feedback.");
+        }
+
+        return feedbackMapper.toDto(feedback);
+    }
 }
