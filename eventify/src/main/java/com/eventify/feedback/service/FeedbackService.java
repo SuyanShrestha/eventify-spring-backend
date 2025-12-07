@@ -67,6 +67,17 @@ public class FeedbackService {
         return feedbackMapper.toDto(feedback);
     }
 
+    public void deleteFeedback(Long feedbackId, Long userId) {
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found"));
+
+        if (!feedback.getUser().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to delete this feedback.");
+        }
+
+        feedbackRepository.delete(feedback);
+    }
+
     
     public List<FeedbackResponseDTO> getFeedbacksForEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)

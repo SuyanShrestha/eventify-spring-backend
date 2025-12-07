@@ -1,9 +1,12 @@
 package com.eventify.feedback.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -71,4 +74,16 @@ public class FeedbackController {
         );
         return ResponseEntity.ok(dto);
     }
+
+    @DeleteMapping("/{feedbackId}")
+    public ResponseEntity<Map<String, String>> deleteFeedback(
+            @PathVariable Long feedbackId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        feedbackService.deleteFeedback(feedbackId, userDetails.getUser().getId());
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .body(Map.of("detail", "Feedback deleted successfully."));
+    }
+
 }
