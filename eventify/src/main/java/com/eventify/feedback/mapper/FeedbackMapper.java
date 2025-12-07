@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
+import com.eventify.feedback.dto.FeedbackRequestDTO;
 import com.eventify.feedback.dto.FeedbackResponseDTO;
 import com.eventify.feedback.model.Feedback;
 
@@ -17,4 +18,10 @@ public interface FeedbackMapper {
     @Mapping(source = "user.username", target = "user.username")
     @Mapping(source = "user.profilePicture", target = "user.profilePicture")
     FeedbackResponseDTO toDto(Feedback feedback);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "event", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    Feedback toEntity(FeedbackRequestDTO dto);
 }
