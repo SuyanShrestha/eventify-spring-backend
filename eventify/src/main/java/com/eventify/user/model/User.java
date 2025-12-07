@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.eventify.core.enums.UserRole;
 import com.eventify.event.model.Event;
 import com.eventify.event.model.SavedEvent;
@@ -62,7 +64,8 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
