@@ -8,4 +8,6 @@ import com.eventify.event.model.EventCategory;
 @Repository
 public interface EventCategoryRepository extends JpaRepository<EventCategory,Integer>{
     
+    boolean existsByNameIgnoreCase(String name);
+
 }

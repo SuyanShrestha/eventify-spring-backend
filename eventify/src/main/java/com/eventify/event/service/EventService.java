@@ -12,6 +12,7 @@ import com.eventify.event.model.Event;
 import com.eventify.event.repository.EventRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +27,7 @@ public class EventService {
     private final EventRepository eventRepository;
 
 
-    public Event save(Event event) {
+    public EventResponseDTO save(Event event) {
         event.setApproved(false);
 
         boolean isFree = event.getTicketPrice() == null || event.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0;
@@ -36,13 +37,15 @@ public class EventService {
             event.setBookingDeadline(event.getEndDate());
         }
 
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        return eventMapper.toDto(savedEvent);
 
     }
 
-    public Event getById(Integer id) {
-        return eventRepository.findById(id)
+    public EventResponseDTO getById(Integer id) {
+        Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + id));
+        return eventMapper.toDto(event);
     }
 
     public void deleteById(Integer id) {
@@ -53,13 +56,58 @@ public class EventService {
     }
 
     public List<EventResponseDTO> getAllEvents() {
-        List<Event> events = eventRepository.findAll();
+        List<Event> events = eventRepository.findByApprovedTrue();
 
         // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
         return events.stream().map(event -> {
             EventResponseDTO dto = eventMapper.toDto(event);
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    public List<EventResponseDTO> getEventsByOrganizer(Long organizerId) {
+        if (organizerId == null || organizerId <= 0) {
+            throw new IllegalArgumentException("Invalid organizer ID: " + organizerId);
+        }
+
+        try {
+            List<Event> events = eventRepository.findByOrganizerId(organizerId);
+
+            // TODO: manually fill remaining fields : attendeesCount, ticketsAvailable, isSaved
+            return events.stream().map(event -> {
+                EventResponseDTO dto = eventMapper.toDto(event);
+                return dto;
+            }).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to fetch events for organizerId: " + organizerId, e);
+        }
+        
+    }
+
+
+    // ADMIN SIDE
+
+    public List<EventResponseDTO> getPendingEvents() {
+        List<Event> pendingEvents = eventRepository.findByApprovedFalse();
+
+        return pendingEvents.stream()
+                .map(eventMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public EventResponseDTO approveEvent(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event with ID " + eventId + " not found"));
+
+        if (event.isApproved()) {
+            throw new IllegalArgumentException("Event with ID " + eventId + " is already approved");
+        }
+
+        event.setApproved(true);
+        Event savedEvent = eventRepository.save(event);
+        return eventMapper.toDto(savedEvent);
     }
 
 }
