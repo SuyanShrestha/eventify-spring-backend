@@ -33,6 +33,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+                ).permitAll()
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events").permitAll()
                 .requestMatchers("/api/admin/**").hasRole(UserRole.SUPERUSER.name())
