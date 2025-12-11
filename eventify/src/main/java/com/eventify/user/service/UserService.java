@@ -1,12 +1,15 @@
 package com.eventify.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import com.eventify.core.email.EmailService;
+import com.eventify.core.email.EmailTemplates;
+import com.eventify.core.email.dto.EmailDTO;
 import com.eventify.security.CustomUserDetails;
 import com.eventify.security.JwtService;
 import com.eventify.user.dto.LoginRequestDTO;
@@ -23,11 +26,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-    
-    private final UserRepository userRepository;
+
+    private final EmailService emailService;
     private final  AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
+
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDto) {
 
@@ -54,6 +62,14 @@ public class UserService {
                             .build());
 
         String token = jwtService.generateAccessToken(savedUser);
+
+        // send email to notify new user
+        EmailDTO email = EmailTemplates.welcomeEmail(
+                registerRequestDto.getEmail(),
+                registerRequestDto.getUsername(),
+                frontendBaseUrl + "/dashboard"
+        );
+        emailService.send(email);
 
         return new RegisterResponseDTO(token, savedUser.getId());
     }
