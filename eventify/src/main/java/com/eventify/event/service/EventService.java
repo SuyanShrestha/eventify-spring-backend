@@ -1,15 +1,19 @@
 package com.eventify.event.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.eventify.core.email.EmailService;
+import com.eventify.core.email.EmailTemplates;
+import com.eventify.core.email.dto.EmailDTO;
+import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.dto.SavedEventResponseDTO;
@@ -39,11 +43,16 @@ public class EventService {
     // we can use INSTANCE directly instead of injection too for eventMapper
     private final EventMapper eventMapper;
 
+    private final EmailService emailService;
+
     private final EventRepository eventRepository;
     private final SavedEventRepository savedEventRepository;
     private final EventCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
+
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
 
 
     @Transactional
@@ -130,6 +139,29 @@ public class EventService {
                     return "Event saved successfully.";
                 });
     }
+
+    @Transactional
+    public void sendInvitations(EventInvitationRequestDTO request) {
+
+        Event event = eventRepository.findById(request.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
+
+        if (!event.isApproved()) {
+            throw new IllegalStateException(
+                    "Invitations cannot be sent because the event is not approved."
+            );
+        }
+        
+        for (String recipient : request.getEmail()) {
+            EmailDTO emailDTO = EmailTemplates.eventInvitation(
+                    recipient,
+                    event,
+                    frontendBaseUrl
+            );
+            emailService.send(emailDTO);
+        }
+    }
+
 
     @Transactional
     public void deleteEvent(Long eventId, Long userId) {
@@ -248,6 +280,15 @@ public class EventService {
 
         event.setApproved(true);
         Event savedEvent = eventRepository.save(event);
+
+        EmailDTO email = EmailTemplates.eventApproval(
+                event.getOrganizer().getEmail(),
+                event.getOrganizer().getUsername(),
+                event.getTitle(),
+                frontendBaseUrl + "/dashboard"
+        );
+
+        emailService.send(email);
         return eventMapper.toDto(savedEvent);
     }
 

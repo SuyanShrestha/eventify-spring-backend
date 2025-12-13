@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventCategoryDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
@@ -93,6 +94,12 @@ public class EventController {
         EventResponseDTO saved = eventService.save(event, userId);
         return ResponseEntity.ok(saved);
         
+    }
+
+    @PostMapping("/send-invitation")
+    public ResponseEntity<String> sendInvitations(@RequestBody EventInvitationRequestDTO request) {
+        eventService.sendInvitations(request);
+        return ResponseEntity.ok("Invitations sent");
     }
 
     @PutMapping("/{id}")
