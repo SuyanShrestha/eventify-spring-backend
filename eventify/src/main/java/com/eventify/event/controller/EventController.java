@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventCategoryDTO;
+import com.eventify.event.dto.EventDetailResponseDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.dto.SavedEventResponseDTO;
@@ -77,12 +78,23 @@ public class EventController {
         return ResponseEntity.ok(savedEvents);
     }
 
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventDetailResponseDTO> getEventDetails(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
+        EventDetailResponseDTO dto = eventService.getEventDetails(eventId, userId);
+        return ResponseEntity.ok(dto);
+    }
+
+
     @PostMapping("/toggle-save/{eventId}")
     public ResponseEntity<Map<String, String>> toggleSaveEvent(
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
         String message = eventService.toggleSaveEvent(eventId, userId);
 
         return ResponseEntity.ok(Map.of("detail", message));
@@ -90,7 +102,7 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<EventResponseDTO> save(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody EventRequestDTO event) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
         EventResponseDTO saved = eventService.save(event, userId);
         return ResponseEntity.ok(saved);
         
