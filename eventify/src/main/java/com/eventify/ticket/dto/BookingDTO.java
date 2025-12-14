@@ -1,4 +1,4 @@
-package com.eventify.event.dto;
+package com.eventify.ticket.dto;
 
 import java.time.LocalDateTime;
 

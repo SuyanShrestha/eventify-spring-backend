@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.eventify.event.enums.EventMode;
 import com.eventify.feedback.dto.FeedbackResponseDTO;
+import com.eventify.ticket.dto.BookingDTO;
 import com.eventify.user.dto.UserDTO;
 
 import lombok.AllArgsConstructor;

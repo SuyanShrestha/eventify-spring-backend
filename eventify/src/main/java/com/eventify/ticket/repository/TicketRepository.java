@@ -26,4 +26,15 @@ public interface TicketRepository extends JpaRepository<Ticket,Long>{
     """)
     List<Ticket> findPaidTicketsForUser(@Param("userId") Long userId);
 
+    @Query("""
+        select coalesce(sum(t.quantity), 0)
+        from Ticket t
+        where t.event.id = :eventId
+          and t.status = :status
+    """)
+    int sumQuantityByEventAndStatus(
+        @Param("eventId") Long eventId,
+        @Param("status") TicketStatus status
+    );
+
 }
