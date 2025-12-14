@@ -6,6 +6,10 @@ import java.time.format.DateTimeFormatter;
 import com.eventify.core.email.dto.EmailDTO;
 import com.eventify.event.enums.EventMode;
 import com.eventify.event.model.Event;
+import com.eventify.payment.model.Payment;
+import com.eventify.ticket.model.BookedTicket;
+import com.eventify.ticket.model.Ticket;
+import com.eventify.user.model.User;
 
 public class EmailTemplates {
 
@@ -404,6 +408,112 @@ public class EmailTemplates {
                 .build();
     }
 
+
+    public static EmailDTO ticketBooked(BookedTicket bookedTicket) {
+
+        Ticket ticket = bookedTicket.getTicket();
+        Event event = ticket.getEvent();
+        User user = ticket.getUser();
+        Payment payment = ticket.getPayment();
+
+        boolean isFree = event.isFreeEvent();
+
+        String subject = "🎟️ Your Ticket for " + event.getTitle();
+
+        String text = """
+                Hello %s,
+
+                Your ticket for "%s" has been successfully booked.
+
+                Date: %s
+                Venue: %s
+                Quantity: %d
+
+                %s
+
+                Please present the attached QR code at the entrance.
+
+                Regards,
+                %s
+                """.formatted(
+                user.getUsername(),
+                event.getTitle(),
+                event.getStartDate(),
+                event.getVenue(),
+                ticket.getQuantity(),
+                isFree ? "This is a free event." : "Payment completed successfully.",
+                event.getOrganizer().getUsername()
+        );
+
+        String paymentHtml = isFree ? "" : """
+            <p style="color: green; font-weight: bold;">Payment Successful ✅</p>
+            <table style="border-collapse: collapse; width: 100%%; margin-top: 10px; font-family: Arial, sans-serif;">
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Item</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Details</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Unit Price</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">%s</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Quantity</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">%d</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Total</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">%s</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">Transaction ID</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">%s</td>
+                </tr>
+            </table>
+            """.formatted(
+                ticket.getUnitPrice(),
+                ticket.getQuantity(),
+                ticket.getTotalPrice(),
+                payment != null ? payment.getTransactionId() : "N/A"
+        );
+
+        String html = """
+            <html>
+                <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h2 style="color: #2E86C1;">Hello %s,</h2>
+                        <p style="font-size: 16px;">Your ticket for <strong>%s</strong> is confirmed!</p>
+
+                        %s
+
+                        <div style="margin: 20px 0; padding: 20px; background-color: #f0f8ff; border-left: 5px solid #2E86C1; border-radius: 8px;">
+                            <p style="font-size: 16px;">📲 <strong>QR Code:</strong> Attached. Show it at the entrance.</p>
+                            <p style="font-size: 16px;">📅 <strong>Date:</strong> %s</p>
+                            <p style="font-size: 16px;">📍 <strong>Venue:</strong> %s</p>
+                            <p style="font-size: 16px;">🎫 <strong>Quantity:</strong> %d</p>
+                        </div>
+
+                        <p style="margin-top: 20px;">We look forward to seeing you at the event! 🚀</p>
+                        <p style="margin-top: 30px;">Best Regards,<br><strong>%s</strong></p>
+                    </div>
+                </body>
+            </html>
+            """.formatted(
+                user.getUsername(),
+                event.getTitle(),
+                paymentHtml,
+                event.getStartDate(),
+                event.getVenue(),
+                ticket.getQuantity(),
+                event.getOrganizer().getUsername()
+        );
+
+        return EmailDTO.builder()
+                .to(user.getEmail())
+                .subject(subject)
+                .textContent(text)
+                .htmlContent(html)
+                .build();
+    }
 
 
 

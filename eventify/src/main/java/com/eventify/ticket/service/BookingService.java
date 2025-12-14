@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.eventify.core.email.EmailService;
+import com.eventify.core.email.EmailTemplates;
+import com.eventify.core.email.dto.EmailDTO;
 import com.eventify.event.model.Event;
 import com.eventify.event.repository.EventRepository;
 import com.eventify.ticket.dto.BookingDTO;
@@ -83,7 +85,8 @@ public class BookingService {
 
         bookedTicketRepository.save(bookedTicket);
 
-        // emailService.sendTicketConfirmation(user, event, bookedTicket);
+        EmailDTO email = EmailTemplates.ticketBooked(bookedTicket);
+        emailService.sendWithAttachment(email, bookedTicket.getQrCodeImage());
 
         return bookingMapper.toDto(bookedTicket);
     }
