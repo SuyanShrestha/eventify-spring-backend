@@ -1,10 +1,7 @@
 package com.eventify.security;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,35 +9,38 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.eventify.user.model.User;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 
-public class CustomUserDetails implements UserDetails {
+public final class CustomUserDetails implements UserDetails {
 
-    private final User user;
+    private static final long serialVersionUID = 1L;
+
+    private final Long userId;
+    private final String email;
+    private final String password;
+    private final String role;
 
     public CustomUserDetails(User user) {
-        this.user = user;
+        this.userId = user.getId();
+        this.email = user.getEmail();
+        this.password = user.getPassword();
+        this.role = user.getRole().name();
     }
 
-    public User getUser() {
-        return user;
+    public Long getUserId() {
+        return userId;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // ROLE_ prefix as spring security conventions
-        String role = "ROLE_" + user.getRole().name();
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override
-    public String getPassword() { return user.getPassword(); }
+    public String getPassword() { return password; }
 
     @Override
-    public String getUsername() { return user.getEmail(); }
+    public String getUsername() { return email; }
 
     @Override
     public boolean isAccountNonExpired() { return true; }

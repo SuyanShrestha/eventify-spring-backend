@@ -26,7 +26,7 @@ public class TicketController {
             @RequestBody BookingRequestDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         BookingDTO booking = bookingService.bookEvent(
                 request.getEventId(),
                 userId,

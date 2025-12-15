@@ -44,8 +44,10 @@ public class UserService {
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword())
         );
 
-        CustomUserDetails cud = (CustomUserDetails) authentication.getPrincipal();
-        User user = cud.getUser();
+        Long userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow();
 
         String token = jwtService.generateAccessToken(user);
 

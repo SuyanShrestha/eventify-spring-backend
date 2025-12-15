@@ -36,7 +36,7 @@ public class FeedbackController {
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = userDetails.getUserId();
         List<FeedbackResponseDTO> feedbacks = feedbackService.getFeedbacksForEvent(eventId, userId);
         return ResponseEntity.ok(feedbacks);
     }
@@ -46,7 +46,7 @@ public class FeedbackController {
             @PathVariable Long feedbackId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        FeedbackResponseDTO dto = feedbackService.getFeedbackById(feedbackId, userDetails.getUser().getId());
+        FeedbackResponseDTO dto = feedbackService.getFeedbackById(feedbackId, userDetails.getUserId());
         return ResponseEntity.ok(dto);
     }
 
@@ -56,7 +56,7 @@ public class FeedbackController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody FeedbackRequestDTO request
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = userDetails.getUserId();
         FeedbackResponseDTO feedback = feedbackService.createFeedback(eventId, userId, request);
         return ResponseEntity.ok(feedback);
     }
@@ -69,7 +69,7 @@ public class FeedbackController {
     ) {
         FeedbackResponseDTO dto = feedbackService.updateFeedback(
                 feedbackId,
-                userDetails.getUser().getId(),
+                userDetails.getUserId(),
                 request
         );
         return ResponseEntity.ok(dto);
@@ -80,7 +80,7 @@ public class FeedbackController {
             @PathVariable Long feedbackId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        feedbackService.deleteFeedback(feedbackId, userDetails.getUser().getId());
+        feedbackService.deleteFeedback(feedbackId, userDetails.getUserId());
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(Map.of("detail", "Feedback deleted successfully."));
