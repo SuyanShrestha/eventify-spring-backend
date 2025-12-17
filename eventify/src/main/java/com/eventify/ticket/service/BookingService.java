@@ -1,8 +1,10 @@
 package com.eventify.ticket.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.eventify.core.email.EmailService;
@@ -11,6 +13,8 @@ import com.eventify.core.email.dto.EmailDTO;
 import com.eventify.event.model.Event;
 import com.eventify.event.repository.EventRepository;
 import com.eventify.ticket.dto.BookingDTO;
+import com.eventify.ticket.dto.CheckinRequestDTO;
+import com.eventify.ticket.dto.CheckinResponseDTO;
 import com.eventify.ticket.enums.TicketStatus;
 import com.eventify.ticket.mapper.BookingMapper;
 import com.eventify.ticket.model.BookedTicket;
@@ -23,9 +27,11 @@ import com.eventify.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingService {
 
     private final EventRepository eventRepository;
@@ -89,6 +95,68 @@ public class BookingService {
         emailService.sendWithAttachment(email, bookedTicket.getQrCodeImage());
 
         return bookingMapper.toDto(bookedTicket);
+    }
+
+    @Transactional
+    public CheckinResponseDTO checkIn(
+            CheckinRequestDTO request,
+            Long userId
+    ) {
+
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() ->
+                    new EntityNotFoundException("User not found")
+            );
+        
+        if (!currentUser.isOrganizer()) {
+            throw new AccessDeniedException(
+                "You do not have permission for ticket verification"
+            );
+        }
+
+        String qrCodeData = request.getQrCodeData();
+        if (qrCodeData == null || qrCodeData.isBlank()) {
+            throw new IllegalArgumentException("QR code data is required");
+        }
+
+        BookedTicket bookedTicket = bookedTicketRepository
+                .findByQrCodeData(qrCodeData)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid QR code")
+                );
+
+        Event event = bookedTicket.getTicket().getEvent();
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new AccessDeniedException(
+                "You do not have permission to verify this ticket."
+            );
+        }
+
+        if (Boolean.TRUE.equals(bookedTicket.getIsCheckedIn())) {
+            throw new IllegalStateException("Ticket already checked in");
+        }
+
+        if (event.getEndDate().toLocalDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("This event has already passed");
+        }
+
+        if (bookedTicket.getTicket().getStatus() != TicketStatus.PAID) {
+            throw new IllegalArgumentException(
+                "Ticket status is "
+                + bookedTicket.getTicket().getStatus().name().toLowerCase()
+                + ", which is not valid for check-in"
+            );
+        }
+
+        bookedTicket.setIsCheckedIn(true);
+        bookedTicket.setCheckedInTime(LocalDateTime.now());
+        bookedTicketRepository.save(bookedTicket);
+
+        return CheckinResponseDTO.builder()
+                .detail("Ticket successfully checked in")
+                .ticketInfo(bookingMapper.toTicketInfo(bookedTicket))
+                .build();
     }
 
 

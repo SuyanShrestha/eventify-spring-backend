@@ -33,12 +33,12 @@ public class BookedTicket {
 
     private LocalDateTime checkedInTime;
 
-    // if checkedInTime wasnt manually set, it will be initialized here before Hibernate inserts it
-    @PrePersist
-    @PreUpdate
-    public void handleCheckInTimestamp() {
-        if (isCheckedIn && checkedInTime == null) {
-            checkedInTime = LocalDateTime.now();
-        }
-    }
+    // // if checkedInTime wasnt manually set, it will be initialized here before Hibernate inserts it
+    // @PrePersist
+    // @PreUpdate
+    // public void handleCheckInTimestamp() {
+    //     if (isCheckedIn && checkedInTime == null) {
+    //         checkedInTime = LocalDateTime.now();
+    //     }
+    // }
 }
