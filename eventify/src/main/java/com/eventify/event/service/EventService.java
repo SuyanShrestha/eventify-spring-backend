@@ -377,17 +377,16 @@ public class EventService {
     }
 
     private Integer getTicketsAvailable(Event event) {
-        int sold = event.getTickets().stream()
-                .filter(t -> t.getStatus() == TicketStatus.PAID)
-                .mapToInt(Ticket::getQuantity)
-                .sum();
-
-        if (event.getTotalTickets() != null) {
-            return event.getTotalTickets() - sold;
-        } else if (event.isFreeEvent()) {
+        if (event.isFreeEvent()) {
             return null;
         }
-        return 0;
+
+        int sold = ticketRepository.sumQuantityByEventAndStatus(
+            event.getId(),
+            TicketStatus.PAID
+        );
+
+        return event.getTotalTickets() - sold;
     }
 
     public AttendeesDTO getAttendees(Event event, Long userId) {
