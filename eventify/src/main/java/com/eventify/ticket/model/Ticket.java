@@ -2,6 +2,7 @@ package com.eventify.ticket.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.eventify.event.model.Event;
 import com.eventify.payment.model.Payment;
@@ -10,11 +11,13 @@ import com.eventify.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
-@Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -55,4 +58,11 @@ public class Ticket {
 
     @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
+
+    @PrePersist
+    private void generateTicketCode() {
+        if (this.ticketCode == null) {
+            this.ticketCode = UUID.randomUUID().toString();
+        }
+    }
 }

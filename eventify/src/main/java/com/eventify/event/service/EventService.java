@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import com.eventify.core.email.EmailService;
 import com.eventify.core.email.EmailTemplates;
 import com.eventify.core.email.dto.EmailDTO;
+import com.eventify.event.dto.AttendeeDetailDTO;
+import com.eventify.event.dto.AttendeesDTO;
+import com.eventify.event.dto.EventDetailResponseDTO;
 import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
@@ -24,8 +27,14 @@ import com.eventify.event.model.SavedEvent;
 import com.eventify.event.repository.EventCategoryRepository;
 import com.eventify.event.repository.EventRepository;
 import com.eventify.event.repository.SavedEventRepository;
+import com.eventify.feedback.mapper.FeedbackMapper;
+import com.eventify.feedback.repository.FeedbackRepository;
+import com.eventify.ticket.dto.BookingDTO;
 import com.eventify.ticket.enums.TicketStatus;
+import com.eventify.ticket.mapper.BookingMapper;
+import com.eventify.ticket.model.BookedTicket;
 import com.eventify.ticket.model.Ticket;
+import com.eventify.ticket.repository.BookedTicketRepository;
 import com.eventify.ticket.repository.TicketRepository;
 import com.eventify.user.model.User;
 import com.eventify.user.repository.UserRepository;
@@ -42,6 +51,8 @@ public class EventService {
 
     // we can use INSTANCE directly instead of injection too for eventMapper
     private final EventMapper eventMapper;
+    private final FeedbackMapper feedbackMapper;
+    private final BookingMapper bookingMapper;
 
     private final EmailService emailService;
 
@@ -50,6 +61,8 @@ public class EventService {
     private final EventCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final BookedTicketRepository bookedTicketRepository;
 
     @Value("${frontend.base.url}")
     private String frontendBaseUrl;
@@ -258,6 +271,47 @@ public class EventService {
         }).toList();
     }
 
+    public EventDetailResponseDTO getEventDetails(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+        
+        EventDetailResponseDTO dto = eventMapper.toDetailDto(event);
+        
+        boolean isSaved = (userId != null) && savedEventRepository.existsByUserIdAndEventId(userId, eventId);
+        dto.setSaved(isSaved);
+        dto.setTicketsAvailable(getTicketsAvailable(event));
+        dto.setAttendees(getAttendees(event, userId));
+
+        if (userId != null && event.getOrganizer().getId().equals(userId)) {
+            dto.setFeedbacks(
+                feedbackRepository.findByEventIdOrderByCreatedAtDesc(eventId)
+                    .stream()
+                    .map(feedbackMapper::toDto)
+                    .toList()
+            );
+        } else {
+            dto.setFeedbacks(List.of());
+        }
+
+        // only show bookings for logged in user, and bookings related to that user
+        if (userId != null) {
+            List<BookedTicket> bookedTickets = bookedTicketRepository
+                .findByTicketUserIdAndTicketEventIdAndTicketStatusOrderByTicketPurchaseDateDesc(
+                    userId, eventId, TicketStatus.PAID
+                );
+
+            List<BookingDTO> bookings = bookedTickets.stream()
+                .map(bookingMapper::toDto)
+                .toList();
+
+            dto.setBookings(bookings);
+        } else {
+            dto.setBookings(List.of());
+        }
+
+        return dto;
+    }
+
 
     // ADMIN SIDE
 
@@ -323,17 +377,50 @@ public class EventService {
     }
 
     private Integer getTicketsAvailable(Event event) {
-        int sold = event.getTickets().stream()
+        if (event.isFreeEvent()) {
+            return null;
+        }
+
+        int sold = ticketRepository.sumQuantityByEventAndStatus(
+            event.getId(),
+            TicketStatus.PAID
+        );
+
+        return event.getTotalTickets() - sold;
+    }
+
+    public AttendeesDTO getAttendees(Event event, Long userId) {
+        // only organizer can see attendees
+        if (userId == null || event.getOrganizer() == null || !event.getOrganizer().getId().equals(userId)) {
+            return AttendeesDTO.builder()
+                    .attendeesCount(0)
+                    .attendeesDetail(List.of())
+                    .build();
+        }
+
+        // only paid tickets to be counted for attendees
+        List<Ticket> paidTickets = event.getTickets().stream()
                 .filter(t -> t.getStatus() == TicketStatus.PAID)
+                .toList();
+
+        int attendeesCount = paidTickets.stream()
                 .mapToInt(Ticket::getQuantity)
                 .sum();
 
-        if (event.getTotalTickets() != null) {
-            return event.getTotalTickets() - sold;
-        } else if (event.isFreeEvent()) {
-            return null;
-        }
-        return 0;
+        List<AttendeeDetailDTO> attendeesDetail = paidTickets.stream()
+                .map(t -> AttendeeDetailDTO.builder()
+                        .userId(t.getUser().getId())
+                        .username(t.getUser().getUsername())
+                        .ticketCount(t.getQuantity())
+                        .isCheckedIn(t.getBookedTicket() != null && Boolean.TRUE.equals(t.getBookedTicket().getIsCheckedIn()))
+                        .build())
+                .toList();
+
+        return AttendeesDTO.builder()
+                .attendeesCount(attendeesCount)
+                .attendeesDetail(attendeesDetail)
+                .build();
     }
+
 
 }

@@ -42,4 +42,35 @@ public class EmailService {
             throw new RuntimeException("Failed to send email to " + emailDTO.getTo(), e);
         }
     }
+
+    @Async
+    public void sendWithAttachment(EmailDTO emailDTO, String attachmentPath) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(emailDTO.getTo());
+            helper.setSubject(emailDTO.getSubject());
+            helper.setText(emailDTO.getTextContent(), emailDTO.getHtmlContent());
+
+            if (attachmentPath != null && !attachmentPath.isBlank()) {
+                java.io.File file = new java.io.File(attachmentPath);
+                if (file.exists()) {
+                    helper.addAttachment(file.getName(), file);
+                    log.info("Attached file {} to email for {}", file.getName(), emailDTO.getTo());
+                } else {
+                    log.warn("Attachment file not found: {}", attachmentPath);
+                }
+            }
+
+            mailSender.send(message);
+            log.info("Email sent to {}", emailDTO.getTo());
+
+        } catch (MessagingException e) {
+            log.error("Failed to send email to {}", emailDTO.getTo(), e);
+            throw new RuntimeException("Failed to send email to " + emailDTO.getTo(), e);
+        }
+    }
+
 }

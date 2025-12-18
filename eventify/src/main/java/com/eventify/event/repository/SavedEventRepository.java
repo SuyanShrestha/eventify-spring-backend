@@ -17,6 +17,7 @@ public interface SavedEventRepository extends JpaRepository<SavedEvent,Long> {
     @Query("select se.event.id from SavedEvent se where se.user.id = :userId")
     Set<Long> findSavedEventIdsByUserId(@Param("userId") Long userId);
 
+    boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
     Optional<SavedEvent> findByUserIdAndEventId(Long userId, Long eventId);
 

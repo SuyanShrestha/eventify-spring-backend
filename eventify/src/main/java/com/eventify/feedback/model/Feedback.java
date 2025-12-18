@@ -10,7 +10,8 @@ import com.eventify.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor

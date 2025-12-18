@@ -6,6 +6,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
+import com.eventify.event.dto.EventDetailResponseDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.model.Event;
@@ -40,5 +41,17 @@ public interface EventMapper {
     @Mapping(target = "freeEvent", expression = "java(dto.getTicketPrice() == null || dto.getTicketPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)")
     @Mapping(target = "bookingDeadline", expression = "java(dto.getBookingDeadline() != null ? dto.getBookingDeadline() : existing.getEndDate())")
     void updateFromDto(EventRequestDTO dto, @MappingTarget Event existing);
+
+    // eventDetails
+    @Mapping(source = "category.id", target = "categoryDetails.id")
+    @Mapping(source = "category.name", target = "categoryDetails.name")
+    @Mapping(source = "organizer.id", target = "organizer.id")
+    @Mapping(source = "organizer.username", target = "organizer.username")
+    @Mapping(source = "organizer.profilePicture", target = "organizer.profilePicture")
+    @Mapping(target = "isUpcoming", expression = "java(event.getStartDate().isAfter(java.time.LocalDateTime.now()))")
+    @Mapping(target = "isActive", expression = "java(!event.getStartDate().isAfter(java.time.LocalDateTime.now()) && !event.getEndDate().isBefore(java.time.LocalDateTime.now()))")
+    @Mapping(target = "isExpired", expression = "java(event.getEndDate().isBefore(java.time.LocalDateTime.now()))")
+    @Mapping(target = "isFree", expression = "java(event.isFreeEvent())")
+    EventDetailResponseDTO toDetailDto(Event event);
 
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventCategoryDTO;
+import com.eventify.event.dto.EventDetailResponseDTO;
 import com.eventify.event.dto.EventRequestDTO;
 import com.eventify.event.dto.EventResponseDTO;
 import com.eventify.event.dto.SavedEventResponseDTO;
@@ -40,7 +41,7 @@ public class EventController {
     public ResponseEntity<List<EventResponseDTO>> getEvents(
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = (userDetails != null) ? userDetails.getUser().getId() : null;
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         List<EventResponseDTO> events = eventService.getAllEvents(userId);
         return ResponseEntity.ok(events);
     }
@@ -56,7 +57,7 @@ public class EventController {
     public ResponseEntity<List<EventResponseDTO>> getMyEvents(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = userDetails.getUserId();
         List<EventResponseDTO> events = eventService.getEventsByOrganizer(userId);
         return ResponseEntity.ok(events);
     }
@@ -65,7 +66,7 @@ public class EventController {
     public ResponseEntity<List<EventResponseDTO>> getMyBookings(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = userDetails.getUserId();
         List<EventResponseDTO> bookings = eventService.getMyBookings(userId);
         return ResponseEntity.ok(bookings);
     }
@@ -73,16 +74,27 @@ public class EventController {
     @GetMapping("/saved")
     public ResponseEntity<List<SavedEventResponseDTO>> getSavedEvents(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<SavedEventResponseDTO> savedEvents = eventService.getSavedEventsForUser(userDetails.getUser().getId());
+        List<SavedEventResponseDTO> savedEvents = eventService.getSavedEventsForUser(userDetails.getUserId());
         return ResponseEntity.ok(savedEvents);
     }
+
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventDetailResponseDTO> getEventDetails(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
+        EventDetailResponseDTO dto = eventService.getEventDetails(eventId, userId);
+        return ResponseEntity.ok(dto);
+    }
+
 
     @PostMapping("/toggle-save/{eventId}")
     public ResponseEntity<Map<String, String>> toggleSaveEvent(
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         String message = eventService.toggleSaveEvent(eventId, userId);
 
         return ResponseEntity.ok(Map.of("detail", message));
@@ -90,7 +102,7 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<EventResponseDTO> save(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody EventRequestDTO event) {
-        Long userId = userDetails.getUser().getId();
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         EventResponseDTO saved = eventService.save(event, userId);
         return ResponseEntity.ok(saved);
         
@@ -108,14 +120,14 @@ public class EventController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EventRequestDTO dto) {
 
-        Long userId = userDetails.getUser().getId();
+        Long userId = userDetails.getUserId();
         EventResponseDTO updated = eventService.update(id, dto, userId);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails user) {
-        eventService.deleteEvent(id, user.getUser().getId());
+        eventService.deleteEvent(id, user.getUserId());
         return ResponseEntity.noContent().build();
     }
 

@@ -17,14 +17,16 @@ import com.eventify.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @NoArgsConstructor 
 @AllArgsConstructor 
 @Builder
-@Data
+@Getter
+@Setter
 @Table(name = "events")
 public class Event {
 
