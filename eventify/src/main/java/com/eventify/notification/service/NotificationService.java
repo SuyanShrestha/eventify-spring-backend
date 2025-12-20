@@ -34,6 +34,26 @@ public class NotificationService {
         notificationRepo.save(n);
     }
 
+    @Transactional
+    public void markAsRead(Long notificationId, Long userId) {
+        Notification notification = notificationRepo
+            .findByIdAndUserId(notificationId, userId)
+            .orElseThrow(() ->
+                new IllegalArgumentException("Notification not found")
+            );
+
+        if (!Boolean.TRUE.equals(notification.getIsRead())) {
+            notification.setIsRead(true);
+            notificationRepo.save(notification);
+        }
+    }
+
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        notificationRepo.markAllAsRead(userId);
+    }
+
+
     public List<NotificationResponseDTO> getUserNotifications(Long userId, Boolean isRead) {
         List<Notification> notifications;
 
