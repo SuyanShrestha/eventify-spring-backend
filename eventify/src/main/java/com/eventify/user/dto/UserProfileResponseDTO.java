@@ -1,5 +1,7 @@
 package com.eventify.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,5 +22,7 @@ public class UserProfileResponseDTO {
     private String profilePicture;
     private String phoneNumber;
     private String address;
+
+    @JsonProperty("is_organizer")
     private boolean isOrganizer;
 }
