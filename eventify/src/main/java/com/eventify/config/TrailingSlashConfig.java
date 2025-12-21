@@ -11,13 +11,13 @@ public class TrailingSlashConfig {
     @Bean
     public FilterRegistrationBean<UrlHandlerFilter> urlHandlerFilter() {
         UrlHandlerFilter filter = UrlHandlerFilter.trailingSlashHandler("/**")
-                .wrapRequest() // Internally handles the request without redirect
+                .wrapRequest() // handle the request without redirect
                 .build();
         
         FilterRegistrationBean<UrlHandlerFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(filter);
-        registrationBean.addUrlPatterns("/*"); // Apply to all URLs
-        registrationBean.setOrder(Integer.MIN_VALUE); // Ensure it runs early in the filter chain
+        registrationBean.addUrlPatterns("/*"); // apply to all URLs
+        registrationBean.setOrder(Integer.MIN_VALUE); // make it run early in the filter chain
         return registrationBean;
     }
 }
