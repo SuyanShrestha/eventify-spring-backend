@@ -17,9 +17,12 @@ import com.eventify.user.dto.LoginRequestDTO;
 import com.eventify.user.dto.LoginResponseDTO;
 import com.eventify.user.dto.RegisterRequestDTO;
 import com.eventify.user.dto.RegisterResponseDTO;
+import com.eventify.user.dto.UserProfileResponseDTO;
+import com.eventify.user.mapper.UserMapper;
 import com.eventify.user.model.User;
 import com.eventify.user.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +34,7 @@ public class UserService {
     private final EmailService emailService;
     private final  AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
@@ -86,5 +90,13 @@ public class UserService {
     public User saveUser(User user) {
         return userRepository.save(user);
     }
+
+    public UserProfileResponseDTO getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return userMapper.toProfileDto(user);
+    }
+
 
 }

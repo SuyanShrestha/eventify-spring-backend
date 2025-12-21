@@ -3,6 +3,7 @@ package com.eventify.event.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import com.eventify.event.repository.EventRepository;
 import com.eventify.event.repository.SavedEventRepository;
 import com.eventify.feedback.mapper.FeedbackMapper;
 import com.eventify.feedback.repository.FeedbackRepository;
+import com.eventify.notification.service.NotificationService;
 import com.eventify.ticket.dto.BookingDTO;
 import com.eventify.ticket.enums.TicketStatus;
 import com.eventify.ticket.mapper.BookingMapper;
@@ -55,6 +57,7 @@ public class EventService {
     private final BookingMapper bookingMapper;
 
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     private final EventRepository eventRepository;
     private final SavedEventRepository savedEventRepository;
@@ -335,14 +338,51 @@ public class EventService {
         event.setApproved(true);
         Event savedEvent = eventRepository.save(event);
 
-        EmailDTO email = EmailTemplates.eventApproval(
+        // notify the organizer that event has been approved.
+        notificationService.notify(
+            event.getOrganizer(),
+            event,
+            "Your event '" + event.getTitle() + "' has been approved."
+        );
+
+        EmailDTO organizerEmail = EmailTemplates.eventApproval(
                 event.getOrganizer().getEmail(),
                 event.getOrganizer().getUsername(),
                 event.getTitle(),
                 frontendBaseUrl + "/dashboard"
         );
+        emailService.send(organizerEmail);
 
-        emailService.send(email);
+        // if bookedUsers are already present, then its an existing event which got approval for updated content.
+        // notify users who booked this event, that the event has been updated.
+        List<BookedTicket> bookedTickets =
+            bookedTicketRepository.findByTicketEventIdAndQrCodeDataIsNotNull(event.getId());
+
+        if (!bookedTickets.isEmpty()) {
+            Set<Long> notifiedUserIds = new HashSet<>();
+
+            for (BookedTicket bt : bookedTickets) {
+                User user = bt.getTicket().getUser();
+
+                if (notifiedUserIds.add(user.getId())) {
+                    notificationService.notify(
+                        user,
+                        event,
+                        "The event '" + event.getTitle() + "' has been updated and approved. Please review the changes."
+                    );
+
+                    EmailDTO email = EmailTemplates.eventUpdated(
+                        user.getEmail(),
+                        user.getUsername(),
+                        event.getTitle(),
+                        frontendBaseUrl + "/events/" + event.getId(),
+                        event.getOrganizer().getUsername()
+                    );
+                    emailService.send(email);
+                }
+            }
+        }
+
         return eventMapper.toDto(savedEvent);
     }
 

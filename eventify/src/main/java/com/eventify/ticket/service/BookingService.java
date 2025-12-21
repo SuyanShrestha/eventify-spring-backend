@@ -3,7 +3,9 @@ package com.eventify.ticket.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import com.eventify.core.email.EmailTemplates;
 import com.eventify.core.email.dto.EmailDTO;
 import com.eventify.event.model.Event;
 import com.eventify.event.repository.EventRepository;
+import com.eventify.notification.service.NotificationService;
 import com.eventify.ticket.dto.BookingDTO;
 import com.eventify.ticket.dto.CheckinRequestDTO;
 import com.eventify.ticket.dto.CheckinResponseDTO;
@@ -38,9 +41,14 @@ public class BookingService {
     private final TicketRepository ticketRepository;
     private final BookedTicketRepository bookedTicketRepository;
     private final UserRepository userRepository;
+
     private final BookingMapper bookingMapper;
     private final QrCodeService qrCodeService;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+
+    @Value("${frontend.base.url}")
+    private String frontendBaseUrl;
 
     @Transactional
     public BookingDTO bookEvent(Long eventId, Long userId, int quantity) {
@@ -152,6 +160,25 @@ public class BookingService {
         bookedTicket.setIsCheckedIn(true);
         bookedTicket.setCheckedInTime(LocalDateTime.now());
         bookedTicketRepository.save(bookedTicket);
+
+        // notify booked user about check-in
+        notificationService.notify(
+            bookedTicket.getTicket().getUser(),
+            event,
+            "Your ticket has been successfully checked in for '" + event.getTitle() + "'."
+        );
+        
+        EmailDTO email = EmailTemplates.checkInConfirmation(
+            bookedTicket.getTicket().getUser().getEmail(),
+            bookedTicket.getTicket().getUser().getUsername(),
+            event.getTitle(),
+            event.getVenue(),
+            bookedTicket.getCheckedInTime()
+                .format(DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' hh:mm a")),
+            frontendBaseUrl + "/events/" + event.getId(),
+            event.getOrganizer().getUsername()
+        );
+        emailService.send(email);
 
         return CheckinResponseDTO.builder()
                 .detail("Ticket successfully checked in")

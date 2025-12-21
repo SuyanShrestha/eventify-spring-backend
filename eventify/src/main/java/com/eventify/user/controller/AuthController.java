@@ -3,16 +3,19 @@ package com.eventify.user.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eventify.security.CustomUserDetails;
 import com.eventify.user.dto.LoginRequestDTO;
 import com.eventify.user.dto.LoginResponseDTO;
 import com.eventify.user.dto.RegisterRequestDTO;
 import com.eventify.user.dto.RegisterResponseDTO;
+import com.eventify.user.dto.UserProfileResponseDTO;
 import com.eventify.user.model.User;
 import com.eventify.user.service.UserService;
 
@@ -45,5 +48,12 @@ public class AuthController {
     public User createUser(@RequestBody User user) {
         return userService.saveUser(user);
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponseDTO> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
+        return ResponseEntity.ok(userService.getProfile(userId));
+    }
+
 
 }

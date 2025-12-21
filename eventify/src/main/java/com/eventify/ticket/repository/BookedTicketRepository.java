@@ -19,4 +19,6 @@ public interface BookedTicketRepository extends JpaRepository<BookedTicket,Long>
     );
 
     Optional<BookedTicket> findByQrCodeData(String qrCodeData);
+
+    List<BookedTicket> findByTicketEventIdAndQrCodeDataIsNotNull(Long eventId);
 }

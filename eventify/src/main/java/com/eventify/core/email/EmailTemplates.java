@@ -167,49 +167,83 @@ public class EmailTemplates {
 
     // to notify users about their checkin
     public static EmailDTO checkInConfirmation(
-        String email,
-        String username,
-        String eventTitle,
-        String venue,
-        String checkInTime,
-        String eventUrl,
-        String organizerName
+            String email,
+            String username,
+            String eventTitle,
+            String venue,
+            String checkInTime,
+            String eventUrl,
+            String organizerName
     ) {
         String subject = "✅ Check-in Confirmed: " + eventTitle;
 
         String text = """
                 Dear %s,
 
-                Your check-in for "%s" is confirmed.
+                Your check-in for "%s" has been successfully confirmed.
 
-                Time: %s
-                Venue: %s
+                🕒 Time: %s
+                📍 Venue: %s
 
-                Enjoy the event!
+                We hope you enjoy the event!
 
-                Regards,
+                Best regards,
                 %s
                 """.formatted(username, eventTitle, checkInTime, venue, organizerName);
 
         String html = """
-                <html>
-                    <h2 style="color:#2E86C1;">🎉 Check-in Successful!</h2>
+            <html>
+            <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+                <div style="max-width: 600px; margin: auto; background: #ffffff;
+                            border-radius: 10px; padding: 24px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+
+                    <h2 style="color: #2E86C1; text-align: center; margin-bottom: 20px;">
+                        🎉 Check-in Successful!
+                    </h2>
+
                     <p>Dear <strong>%s</strong>,</p>
-                    <p>Your check-in for <strong>%s</strong> was successful!</p>
 
-                    <p>🕒 <strong>Time:</strong> %s</p>
-                    <p>📍 <strong>Venue:</strong> %s</p>
-
-                    <p style="margin-top:20px;">
-                        <a href="%s"
-                        style="background-color:#2E86C1;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">
-                            View Event Details
-                        </a>
+                    <p>
+                        We’re excited to confirm that your check-in for
+                        <strong>%s</strong> was successful! 🏆
                     </p>
 
-                    <p style="margin-top:30px;">Best Regards,<br><strong>%s</strong></p>
-                </html>
-                """.formatted(username, eventTitle, checkInTime, venue, eventUrl, organizerName);
+                    <div style="margin: 20px 0; padding: 16px;
+                                background-color: #f9f9f9;
+                                border-radius: 8px;">
+                        <p style="margin: 0;">🕒 <strong>Check-in Time:</strong> %s</p>
+                        <p style="margin: 8px 0 0;">📍 <strong>Venue:</strong> %s</p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 24px;">
+                        <a href="%s"
+                        style="background-color: #2E86C1;
+                                color: #ffffff;
+                                padding: 12px 24px;
+                                text-decoration: none;
+                                border-radius: 6px;
+                                font-weight: bold;
+                                display: inline-block;">
+                            View Event Details
+                        </a>
+                    </div>
+
+                    <p style="margin-top: 32px;">
+                        Best Regards,<br>
+                        <strong>%s</strong>
+                    </p>
+                </div>
+            </body>
+            </html>
+            """.formatted(
+                username,
+                eventTitle,
+                checkInTime,
+                venue,
+                eventUrl,
+                organizerName
+            );
 
         return EmailDTO.builder()
                 .to(email)
@@ -218,7 +252,6 @@ public class EmailTemplates {
                 .htmlContent(html)
                 .build();
     }
-
 
     // when event is updated
     public static EmailDTO eventUpdated(
