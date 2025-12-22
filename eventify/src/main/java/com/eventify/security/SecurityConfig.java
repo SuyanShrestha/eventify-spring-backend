@@ -35,6 +35,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/error").permitAll()      // so that spring security doesn't swallow errors unrelated to auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events").permitAll()
