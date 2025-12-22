@@ -38,6 +38,7 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "organizer", ignore = true)
     @Mapping(target = "approved", ignore = true)
+    @Mapping(target = "banner", ignore = true)
     @Mapping(target = "freeEvent", expression = "java(dto.getTicketPrice() == null || dto.getTicketPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)")
     @Mapping(target = "bookingDeadline", expression = "java(dto.getBookingDeadline() != null ? dto.getBookingDeadline() : existing.getEndDate())")
     void updateFromDto(EventRequestDTO dto, @MappingTarget Event existing);

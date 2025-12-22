@@ -118,7 +118,7 @@ public class EventService {
     }
 
     @Transactional
-    public EventResponseDTO update(Long eventId, EventRequestDTO dto, Long userId) {
+    public EventResponseDTO update(Long eventId, EventRequestDTO dto, MultipartFile bannerFile, Long userId) {
         validateEventDates(dto);
 
         Event existing = eventRepository.findById(eventId)
@@ -135,6 +135,22 @@ public class EventService {
         }
 
         eventMapper.updateFromDto(dto, existing);
+
+        if (bannerFile != null && !bannerFile.isEmpty()) {
+            try {
+                String newBannerUrl = fileStorageService.store(bannerFile);
+                String oldBannerUrl = existing.getBanner();
+
+                if (oldBannerUrl != null && !oldBannerUrl.isEmpty()) {
+                    fileStorageService.delete(oldBannerUrl); // lets delete old banner after new one replaces it
+                }
+
+                existing.setBanner(newBannerUrl);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Failed to store event banner", ex);
+            }
+        }
+
         existing.setApproved(false);
         Event saved = eventRepository.save(existing);
 

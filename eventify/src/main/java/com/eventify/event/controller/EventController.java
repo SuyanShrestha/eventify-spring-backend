@@ -123,14 +123,15 @@ public class EventController {
         return ResponseEntity.ok("Invitations sent");
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EventResponseDTO> update(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody EventRequestDTO dto) {
+            @ModelAttribute EventRequestDTO dto,
+            @RequestPart(value = "bannerFile", required = false) MultipartFile bannerFile) {
 
-        Long userId = userDetails.getUserId();
-        EventResponseDTO updated = eventService.update(id, dto, userId);
+        Long userId = (userDetails != null) ? userDetails.getUserId() : null;
+        EventResponseDTO updated = eventService.update(id, dto, bannerFile, userId);
         return ResponseEntity.ok(updated);
     }
 

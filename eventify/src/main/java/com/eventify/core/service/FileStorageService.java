@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageService {
 
-    private final Path root = Paths.get("uploads/events");
+    private final Path root = Paths.get("/app/uploads/events");
 
     public FileStorageService() throws IOException {
         Files.createDirectories(root);
@@ -29,4 +29,18 @@ public class FileStorageService {
 
         return "/uploads/events/" + filename;
     }
+
+    public void delete(String fileUrl) throws IOException {
+        if (fileUrl == null || fileUrl.isEmpty()) return;
+
+        String filename = Paths.get(fileUrl).getFileName().toString();
+        Path filePath = root.resolve(filename);
+
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+        } else {
+            System.out.println("File not found: " + filePath.toAbsolutePath());
+        }
+    }
+
 }
