@@ -37,6 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()      // so that spring security doesn't swallow errors unrelated to auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/uploads/events/**").permitAll() 
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events").permitAll()
                 .requestMatchers("/api/admin/**").hasRole(UserRole.SUPERUSER.name())

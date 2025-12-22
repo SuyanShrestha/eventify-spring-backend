@@ -7,7 +7,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - qrdata:/app/uploads/qr_codes
+      - uploads_data:/app/uploads
 
   postgres:
     image: postgres:16
@@ -24,4 +24,4 @@ services:
 
 volumes:
   pgdata:
-  qrdata:
+  uploads_data:

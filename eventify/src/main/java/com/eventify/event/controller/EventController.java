@@ -3,16 +3,20 @@ package com.eventify.event.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.eventify.event.dto.EventInvitationRequestDTO;
 import com.eventify.event.dto.EventCategoryDTO;
@@ -100,10 +104,15 @@ public class EventController {
         return ResponseEntity.ok(Map.of("detail", message));
     }
 
-    @PostMapping
-    public ResponseEntity<EventResponseDTO> save(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody EventRequestDTO event) {
+    // accepts images, so modelAttribute, and requestPart for files
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventResponseDTO> save(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @ModelAttribute EventRequestDTO event,
+        @RequestPart(value = "bannerFile", required = false) MultipartFile bannerFile
+    ) {
         Long userId = (userDetails != null) ? userDetails.getUserId() : null;
-        EventResponseDTO saved = eventService.save(event, userId);
+        EventResponseDTO saved = eventService.save(event, bannerFile, userId);
         return ResponseEntity.ok(saved);
         
     }

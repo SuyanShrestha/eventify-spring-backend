@@ -1,5 +1,6 @@
 package com.eventify.event.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,10 +11,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.eventify.core.email.EmailService;
 import com.eventify.core.email.EmailTemplates;
 import com.eventify.core.email.dto.EmailDTO;
+import com.eventify.core.service.FileStorageService;
 import com.eventify.event.dto.AttendeeDetailDTO;
 import com.eventify.event.dto.AttendeesDTO;
 import com.eventify.event.dto.EventDetailResponseDTO;
@@ -58,6 +61,7 @@ public class EventService {
 
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final FileStorageService fileStorageService;
 
     private final EventRepository eventRepository;
     private final SavedEventRepository savedEventRepository;
@@ -72,14 +76,24 @@ public class EventService {
 
 
     @Transactional
-    public EventResponseDTO save(EventRequestDTO dto, Long userId) {
+    public EventResponseDTO save(EventRequestDTO dto, MultipartFile bannerFile, Long userId) {
 
+        log.debug("inside save event, dto : {}", dto);
         validateEventDates(dto);
 
         EventCategory category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category"));
 
         Event event = eventMapper.fromRequestDto(dto);
+
+        if (bannerFile != null && !bannerFile.isEmpty()) {
+            try {
+                String bannerUrl = fileStorageService.store(bannerFile);
+                event.setBanner(bannerUrl);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Failed to store event banner", ex);
+            }
+        }
 
         event.setCategory(category);
         event.setApproved(false);
