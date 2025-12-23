@@ -43,4 +43,18 @@ public class FileStorageService {
         }
     }
 
+    public String replace(MultipartFile file, String existingUrl) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return existingUrl;
+        }
+
+        String newUrl = store(file);
+
+        if (existingUrl != null && !existingUrl.isBlank()) {
+            delete(existingUrl);
+        }
+
+        return newUrl;
+    }
+
 }

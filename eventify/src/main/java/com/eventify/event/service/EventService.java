@@ -138,14 +138,8 @@ public class EventService {
 
         if (bannerFile != null && !bannerFile.isEmpty()) {
             try {
-                String newBannerUrl = fileStorageService.store(bannerFile);
-                String oldBannerUrl = existing.getBanner();
-
-                if (oldBannerUrl != null && !oldBannerUrl.isEmpty()) {
-                    fileStorageService.delete(oldBannerUrl); // lets delete old banner after new one replaces it
-                }
-
-                existing.setBanner(newBannerUrl);
+                String updatedBannerUrl = fileStorageService.replace(bannerFile, existing.getBanner());
+                existing.setBanner(updatedBannerUrl);
             } catch (IOException ex) {
                 throw new IllegalStateException("Failed to store event banner", ex);
             }
