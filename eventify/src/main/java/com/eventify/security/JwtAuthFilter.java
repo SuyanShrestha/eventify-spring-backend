@@ -16,9 +16,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -38,26 +40,39 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.split("Bearer ")[1];
-        String email = jwtService.extractEmailFromToken(token);
-
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            // loadUserByUsername() since we need to override it for implementing UserDetailsService interface
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+        String token = authHeader.substring(7).trim();
+        if (token.isEmpty() || token.equalsIgnoreCase("null")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
+        try{
+            String email = jwtService.extractEmailFromToken(token);
+
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                // loadUserByUsername() since we need to override it for implementing UserDetailsService interface
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
+        } catch (Exception ex) {
+            log.error("JWT authentication failed: {}", ex.getMessage(), ex);
+
+            // clear context to avoid partial auth
+            SecurityContextHolder.clearContext();
+        }
+        
         filterChain.doFilter(request, response);
     }
 }

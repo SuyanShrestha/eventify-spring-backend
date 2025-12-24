@@ -53,9 +53,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow();
 
-        String token = jwtService.generateAccessToken(user);
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        return new LoginResponseDTO(token, user.getId());
+        return new LoginResponseDTO("User logged-in successfully.", accessToken, refreshToken);
     }
 
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDto) {
@@ -74,7 +75,8 @@ public class UserService {
                             .role(role)
                             .build());
 
-        String token = jwtService.generateAccessToken(savedUser);
+        String accessToken = jwtService.generateAccessToken(savedUser);
+        String refreshToken = jwtService.generateRefreshToken(savedUser.getEmail());
 
         // send email to notify new user
         EmailDTO email = EmailTemplates.welcomeEmail(
@@ -84,7 +86,7 @@ public class UserService {
         );
         emailService.send(email);
 
-        return new RegisterResponseDTO(token, savedUser.getId());
+        return new RegisterResponseDTO("User registered successfully.", accessToken, refreshToken);
     }
 
     public User saveUser(User user) {
